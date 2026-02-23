@@ -1,0 +1,150 @@
+.atm {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.atm__header,
+.atm__footer {
+  width: 100%;
+  background-color: var(--blue);
+  height: 10px;
+  flex-shrink: 0;
+}
+
+.atm__main {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.atm__sidebar {
+  background-color: var(--blue);
+  width: 140px;
+  padding: 20px;
+  display: flex;
+  align-items: end;
+}
+
+.atm__sidebar--left {
+  justify-content: end;
+}
+
+.atm__screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.atm__screen-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.atm__logo {
+  width: 320px;
+  height: auto;
+  margin-bottom: 15px;
+}
+
+.atm__screen-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+
+.atm__title {
+  color: white;
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  margin-top: 40px;
+  max-width: 400px;
+  text-align: center;
+}
+
+.atm__menu {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  flex: 1;
+  gap: 20px;
+  padding-bottom: 30px;
+}
+
+.atm__menu-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  flex: 1;
+  gap: 60px;
+
+}
+
+/* Modifier: atm__menu-column--left */
+.atm__menu-column--left {
+  align-items: flex-start;
+  padding-left: 20px;
+}
+
+/* Modifier: atm__menu-column--right */
+.atm__menu-column--right {
+  align-items: flex-end;
+  padding-right: 20px;
+}
+
+.atm__menu-option {
+  color: white;
+  font-size: 22px;
+  font-weight: 500;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+  cursor: default;
+}
+
+
+.atm__buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  justify-content: center;
+}
+
+/* Element: atm__button */
+.atm__button {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.2s, opacity 0.2s;
+
+}
+
+.atm__button:hover {
+  transform: scale(1.05);
+  opacity: 0.9;
+}
+
+.atm__button:active {
+  transform: scale(0.95);
+}
+
+.atm__button-img {
+  display: block;
+  width: 80px;
+  height: auto;
+}
+
+/* Modifier: atm__button--disabled */
+.atm__button--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(100%);
+}

@@ -1,0 +1,32 @@
+.rdp-custom {
+  .rdp-outside {
+    color: #9ca3af;
+  }
+
+  .rdp-selected .rdp-day_button {
+    background-color: #ccc;
+    border: none
+  }
+
+  .rdp-dropdowns {
+    gap: 20px;
+  }
+
+  .rdp-months_dropdown,
+  .rdp-caption_label {
+    text-transform: capitalize;
+  }
+
+  .rdp-caption_label {
+    gap: 6px;
+  }
+}
+
+.rdp-dropdown,
+.rdp-months_dropdown,
+.rdp-years_dropdown,
+.rdp-caption_label {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
