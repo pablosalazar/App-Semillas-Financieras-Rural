@@ -146,18 +146,11 @@ export default function PreQuestions() {
             <p className="text-2xl mb-3">
               {score.correct} de {score.total} respuestas correctas
             </p>
-            {score.percentage >= 80 && (
-              <p className="bg-green-50 text-green-700 italic font-semibold p-6 rounded-2xl mb-6 text-2xl border-2 border-green-700">
-                Usted ya sabe las bases de la educación financiera, siga
-                aprendiendo para enriquecer su conocimiento.
-              </p>
-            )}
-            {score.percentage < 80 && (
-              <p className="bg-white italic text-amber-500 font-medium p-6 rounded-2xl mb-6 text-2xl border-2 border-amber-500">
-                Recuerda que solo queremos saber tus conocimientos previos,
-                juega con nosotros para mejorar tu conocimiento.
-              </p>
-            )}
+            <p className="bg-white/20 italic font-medium p-6 rounded-2xl mb-6 text-xl border-2 border-white/40">
+              Este es solo el inicio. Ahora le invitamos a recorrer los
+              siguientes módulos, donde aprenderá cómo organizar su dinero,
+              ahorrar con propósito y tomar mejores decisiones financieras.
+            </p>
             <button className="btn btn-orange" onClick={handleForward}>
               Avanzar <ChevronRight />
             </button>

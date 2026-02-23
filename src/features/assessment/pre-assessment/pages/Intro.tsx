@@ -17,7 +17,7 @@ export default function PreIntro() {
         {/* Welcome Header */}
         <div className="text-center space-y-6 mb-8">
           <h1 className="text-4xl sm:text-5xl font-bold text-(--blue) leading-tight">
-            ¡Bienvenida {displayName(user)}!
+            ¡Bienvenid@ {displayName(user)}!
           </h1>
 
           <div className="space-y-4">
@@ -28,7 +28,13 @@ export default function PreIntro() {
 
             <div className="bg-orange-50 rounded-2xl p-6 border-2 border-orange-200">
               <p className="text-lg sm:text-xl leading-relaxed ">
-                Antes de iniciar, cuéntenos qué conoce de educación financiera.
+                Antes de comenzar, le invitamos a responder unas breves
+                preguntas que nos ayudarán a identificar qué tanto sabe sobre el
+                manejo del dinero.
+              </p>
+              <p className="text-lg sm:text-xl leading-relaxed mt-3">
+                Recuerde que este no es un examen. Lo importante es que responda
+                lo que usted considere correcto, sin ayuda de nadie.
               </p>
             </div>
           </div>
