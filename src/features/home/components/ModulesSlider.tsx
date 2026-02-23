@@ -87,7 +87,6 @@ export function ModulesSlider() {
                       <img
                         src={module.image}
                         alt={module.name}
-                        className={module.isCompleted ? "" : "opacity-50"}
                         title={module.name}
                       />
                     </Link>
