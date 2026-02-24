@@ -1,6 +1,6 @@
-const BASE_PATH = "/modulos/salud-economica";
+const BASE_PATH = "/modulos/bienestar-financiero";
 
-export const SALUD_ECONOMICA_PATHS = {
+export const BIENESTAR_FINANCIERO_PATHS = {
   BASE_PATH,
   INTRO: `${BASE_PATH}`,
   INSTRUCTIONS: `${BASE_PATH}/instrucciones`,

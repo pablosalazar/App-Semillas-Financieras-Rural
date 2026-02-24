@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 import { ModulePageLayout } from "@/shared/components/ModulePageLayout";
 import { VideoPlayerCard } from "@/shared/components/VideoPlayerCard";
-import { useSaludEconomica } from "../context/SaludEconomicaContext";
-import { SALUD_ECONOMICA_PATHS } from "../constants/paths";
+import { useBienestarFinanciero } from "../context/BienestarFinancieroContext";
+import { BIENESTAR_FINANCIERO_PATHS } from "../constants/paths";
 import { useNavigate } from "react-router";
 import goldVideo from "@/assets/videos/awards/gold.mp4";
 import silverVideo from "@/assets/videos/awards/silver.mp4";
@@ -10,26 +10,26 @@ import bronzeVideo from "@/assets/videos/awards/bronze.mp4";
 import applauseSound from "@/assets/sounds/applause.mp3";
 
 function getAwardVideo(score: number): string {
-  if (score > 4.5) return goldVideo;
-  if (score > 4) return silverVideo;
+  if (score >= 15) return goldVideo;
+  if (score >= 7) return silverVideo;
   return bronzeVideo;
 }
 
 export default function Reward() {
-  const { score } = useSaludEconomica();
+  const { score } = useBienestarFinanciero();
   const navigate = useNavigate();
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Redirect to questions if score is null or zero
+  // Redirect to questions if score is null
   useEffect(() => {
-    if (score === null || score === 0) {
-      navigate(SALUD_ECONOMICA_PATHS.QUESTIONS);
+    if (score === null) {
+      navigate(BIENESTAR_FINANCIERO_PATHS.QUESTIONS);
     }
   }, [score, navigate]);
 
   // Play applause sound when component mounts
   useEffect(() => {
-    if (score !== null && score > 0) {
+    if (score !== null) {
       const audio = new Audio(applauseSound);
       audioRef.current = audio;
       audio.play().catch((error) => {
@@ -46,14 +46,14 @@ export default function Reward() {
     }
   }, [score]);
 
-  if (score === null || score === 0) {
-    return null; // Will redirect, so return nothing
+  if (score === null) {
+    return null;
   }
 
   const awardVideo = getAwardVideo(score);
 
   return (
-    <ModulePageLayout title="Salud Económica">
+    <ModulePageLayout title="Bienestar Financiero">
       <VideoPlayerCard
         src={awardVideo}
         nextRoute="/home"

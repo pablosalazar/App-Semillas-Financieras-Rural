@@ -1,6 +1,6 @@
 import type { ModuleRoutes } from "../types/modules.type";
 import { lazy } from "react";
-import { SaludEconomicaProvider } from "./context/SaludEconomicaContext";
+import { BienestarFinancieroProvider } from "./context/BienestarFinancieroContext";
 
 const Intro = lazy(() => import("./pages/Intro"));
 const Instructions = lazy(() => import("./pages/Instructions"));
@@ -8,11 +8,11 @@ const Questions = lazy(() => import("./pages/Questions"));
 const Feedback = lazy(() => import("./pages/Feedback"));
 const Reward = lazy(() => import("./pages/Reward"));
 
-export const saludEconomicaRoutes: ModuleRoutes = {
-  basePath: "salud-economica",
+export const bienestarFinancieroRoutes: ModuleRoutes = {
+  basePath: "bienestar-financiero",
   routes: [
     {
-      element: <SaludEconomicaProvider />,
+      element: <BienestarFinancieroProvider />,
       children: [
         {
           path: "",

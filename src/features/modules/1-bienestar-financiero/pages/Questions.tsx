@@ -4,12 +4,12 @@ import { QUESTIONS } from "../constants/questions";
 import { ProgressBar } from "@/shared/components/ProgressBar";
 import { ModulePageLayout } from "@/shared/components/ModulePageLayout";
 import { useNavigate } from "react-router";
-import { useSaludEconomica } from "../context/SaludEconomicaContext";
-import { SALUD_ECONOMICA_PATHS } from "../constants/paths";
+import { useBienestarFinanciero } from "../context/BienestarFinancieroContext";
+import { BIENESTAR_FINANCIERO_PATHS } from "../constants/paths";
 
 export default function Questions() {
   const navigate = useNavigate();
-  const { setScore } = useSaludEconomica();
+  const { setScore } = useBienestarFinanciero();
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [scoreSum, setScoreSum] = useState(0);
@@ -23,10 +23,9 @@ export default function Questions() {
     setScoreSum(newSum);
 
     if (isLastQuestion) {
-      const score = newSum / QUESTIONS.length;
-
-      setScore(score);
-      navigate(SALUD_ECONOMICA_PATHS.FEEDBACK);
+      // Score is the total sum (0–20 range)
+      setScore(newSum);
+      navigate(BIENESTAR_FINANCIERO_PATHS.FEEDBACK);
     } else {
       setIsAnimating(true);
       setTimeout(() => {
@@ -37,7 +36,7 @@ export default function Questions() {
   };
 
   return (
-    <ModulePageLayout title="Salud Económica">
+    <ModulePageLayout title="Bienestar Financiero">
       <div className="space-y-6">
         {/* Progress Bar */}
         <ProgressBar

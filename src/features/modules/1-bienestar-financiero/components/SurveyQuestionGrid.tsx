@@ -41,14 +41,13 @@ export function SurveyQuestionGrid({
 
   const getButtonClassName = (optionId: string) => {
     const baseClasses =
-      "flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-3 transition-all min-h-[120px] text-center";
+      "flex flex-col items-center justify-center gap-3 p-4 rounded-2xl border-3 transition-all min-h-[90px] text-center";
 
     if (selectedOption === optionId) {
       return `${baseClasses} border-blue-500 bg-blue-50 shadow-lg scale-105 cursor-pointer`;
     }
 
     if (selectedOption !== null) {
-      // Disabled state for non-selected options
       return `${baseClasses} border-gray-300 bg-gray-100 opacity-50 cursor-not-allowed`;
     }
 
@@ -78,8 +77,8 @@ export function SurveyQuestionGrid({
         {question}
       </h2>
 
-      {/* Options - 2x2 Grid */}
-      <div className="grid grid-cols-2 gap-4 max-w-3xl mx-auto">
+      {/* Options — responsive: 2 cols on small, 3 cols on md+ */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-w-3xl mx-auto">
         {options.map((option) => (
           <button
             key={option.id}
@@ -88,7 +87,7 @@ export function SurveyQuestionGrid({
             disabled={selectedOption !== null && selectedOption !== option.id}
           >
             {getOptionIcon(option.id)}
-            <span className="text-lg font-semibold text-gray-800">
+            <span className="text-base font-semibold text-gray-800">
               {option.text}
             </span>
           </button>

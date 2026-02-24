@@ -1,17 +1,17 @@
 import { createContext, useContext, useState } from "react";
 import { Outlet } from "react-router";
 
-interface SaludEconomicaContextType {
+interface BienestarFinancieroContextType {
   score: number | null;
   setScore: (score: number) => void;
   resetScore: () => void;
 }
 
-const SaludEconomicaContext = createContext<
-  SaludEconomicaContextType | undefined
+const BienestarFinancieroContext = createContext<
+  BienestarFinancieroContextType | undefined
 >(undefined);
 
-export function SaludEconomicaProvider() {
+export function BienestarFinancieroProvider() {
   const [score, setScoreState] = useState<number | null>(null);
 
   const setScore = (newScore: number) => {
@@ -23,18 +23,20 @@ export function SaludEconomicaProvider() {
   };
 
   return (
-    <SaludEconomicaContext.Provider value={{ score, setScore, resetScore }}>
+    <BienestarFinancieroContext.Provider
+      value={{ score, setScore, resetScore }}
+    >
       <Outlet />
-    </SaludEconomicaContext.Provider>
+    </BienestarFinancieroContext.Provider>
   );
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export function useSaludEconomica() {
-  const context = useContext(SaludEconomicaContext);
+export function useBienestarFinanciero() {
+  const context = useContext(BienestarFinancieroContext);
   if (context === undefined) {
     throw new Error(
-      "useSaludEconomica must be used within a SaludEconomicaProvider"
+      "useBienestarFinanciero must be used within a BienestarFinancieroProvider",
     );
   }
   return context;

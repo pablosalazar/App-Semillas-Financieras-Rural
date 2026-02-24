@@ -1,5 +1,5 @@
 import type { ModuleRoutes } from "./types/modules.type";
-import { saludEconomicaRoutes } from "./1-salud-economica/routes";
+import { bienestarFinancieroRoutes } from "./1-bienestar-financiero/routes";
 import { yoLlevoMisCuentasRoutes } from "./2-yo-llevo-mis-cuentas/routes";
 import { yoAhorroRoutes } from "./3-yo-ahorro/routes";
 import { deudasSanasRoutes } from "./4-deudas-sanas/routes";
@@ -12,7 +12,7 @@ import { recomendacionesDeSeguridadRoutes } from "./10-recomendaciones-de-seguri
 import { miAprendizajeRoutes } from "./11-mi-aprendizaje/routes";
 
 export const modules: ModuleRoutes[] = [
-  saludEconomicaRoutes,
+  bienestarFinancieroRoutes,
   yoLlevoMisCuentasRoutes,
   yoAhorroRoutes,
   deudasSanasRoutes,
@@ -35,8 +35,8 @@ export function getModuleRoutes(): import("react-router").RouteObject[] {
         route.path === ""
           ? ""
           : route.path?.startsWith("/")
-          ? route.path.slice(1)
-          : route.path,
+            ? route.path.slice(1)
+            : route.path,
     })),
   }));
 }
