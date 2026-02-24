@@ -1,10 +1,10 @@
-# App Semillas Financieras Urbano
+# App Semillas Financieras Rural
 
-A comprehensive mobile financial education platform designed to improve financial literacy in urban communities through interactive learning modules, assessments, and personalized certificates.
+A comprehensive mobile financial education platform designed to improve financial literacy in rural communities through interactive learning modules, assessments, and personalized certificates.
 
 ## 📱 Overview
 
-**App Semillas Financieras Urbano** is a mobile-first educational application that guides users through a structured financial literacy journey. The app measures knowledge improvement through pre/post assessments and rewards completion with a personalized PDF certificate delivered via email.
+**App Semillas Financieras Rural** is a mobile-first educational application that guides users through a structured financial literacy journey. The app measures knowledge improvement through pre/post assessments and rewards completion with a personalized PDF certificate delivered via email.
 
 ## 🎯 User Journey
 
@@ -109,7 +109,7 @@ src/
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd App-Semillas-Financieras-Urbano
+cd App-Semillas-Financieras-Rural
 ```
 
 2. Install dependencies:

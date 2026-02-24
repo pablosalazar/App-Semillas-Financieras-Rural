@@ -1,4 +1,4 @@
-package com.semillasfinancieras.urbano;
+package com.semillasfinancieras.rural;
 
 import android.os.Bundle;
 import android.view.View;
@@ -12,7 +12,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+
         // Enable fullscreen immersive mode
         enableImmersiveMode();
     }
@@ -28,10 +28,10 @@ public class MainActivity extends BridgeActivity {
     private void enableImmersiveMode() {
         View decorView = getWindow().getDecorView();
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
-        
-        WindowInsetsControllerCompat windowInsetsController = 
+
+        WindowInsetsControllerCompat windowInsetsController =
             WindowCompat.getInsetsController(getWindow(), decorView);
-        
+
         if (windowInsetsController != null) {
             // Hide both status bar and navigation bar
             windowInsetsController.hide(WindowInsetsCompat.Type.systemBars());
@@ -40,7 +40,5 @@ public class MainActivity extends BridgeActivity {
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             );
         }
-        
-
     }
 }

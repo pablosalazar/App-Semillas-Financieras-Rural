@@ -56,7 +56,7 @@ The app is configured to force landscape orientation in [AndroidManifest.xml](an
 
 ### Fullscreen Immersive Mode
 
-The [MainActivity.java](android/app/src/main/java/com/semillasfinancieras/urbano/MainActivity.java) implements immersive fullscreen mode to hide system UI bars:
+The [MainActivity.java](android/app/src/main/java/com/semillasfinancieras/rural/MainActivity.java) implements immersive fullscreen mode to hide system UI bars:
 
 - Hides status bar (top)
 - Hides navigation bar (bottom)
@@ -98,7 +98,7 @@ npx cap sync android
 
 If landscape or fullscreen mode isn't working:
 
-1. Verify the changes are present in `android/app/src/main/AndroidManifest.xml` and `android/app/src/main/java/com/semillasfinancieras/urbano/MainActivity.java`
+1. Verify the changes are present in `android/app/src/main/AndroidManifest.xml` and `android/app/src/main/java/com/semillasfinancieras/rural/MainActivity.java`
 2. Rebuild the app: `pnpm android:run`
 3. Uninstall the old app from your device before installing the new one
 

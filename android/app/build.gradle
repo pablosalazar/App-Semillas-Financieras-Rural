@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "com.semillasfinancieras.urbano"
+    namespace "com.semillasfinancieras.rural"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.semillasfinancieras.urbano"
+        applicationId "com.semillasfinancieras.rural"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
