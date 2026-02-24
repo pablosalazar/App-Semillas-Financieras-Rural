@@ -49,6 +49,11 @@ body {
   background-size: cover;
 }
 
+.bg-login {
+  background-image: url("@/assets/images/backgrounds/bg-login.png");
+  background-size: cover;
+}
+
 .card-withe-transparent {
   background: rgba(255, 255, 255, 0.5);
   border-radius: 25px;
