@@ -12,7 +12,8 @@
     "db:seed": "tsx scripts/seeders/index.ts seed",
     "db:reset": "tsx scripts/seeders/index.ts reset",
     "android:run": "export JAVA_HOME=\"/Applications/Android Studio.app/Contents/jbr/Contents/Home\" && pnpm build && cap sync && cd android && ./gradlew installDebug",
-    "android:apk": "export JAVA_HOME=\"/Applications/Android Studio.app/Contents/jbr/Contents/Home\" && pnpm build && cap sync && cd android && ./gradlew assembleDebug"
+    "android:apk": "export JAVA_HOME=\"/Applications/Android Studio.app/Contents/jbr/Contents/Home\" && pnpm build && cap sync && cd android && ./gradlew assembleDebug",
+    "cap:assets": "npx @capacitor/assets generate --assetPath resources --android"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.4",

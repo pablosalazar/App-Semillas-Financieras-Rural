@@ -222,11 +222,15 @@ npx cap add android
 
 ### App Icon and Splash Screen
 
-Place your assets in:
-- Icon: `android/app/src/main/res/mipmap-*/ic_launcher.png`
-- Splash: `android/app/src/main/res/drawable/splash.png`
+**Using @capacitor/assets (recommended):**
 
-Or use the [Capacitor Assets](https://github.com/ionic-team/capacitor-assets) tool to generate all sizes automatically.
+1. Place source images in `resources/`:
+   - `icon.png` (or `icon-only.png`) — at least 1024×1024px for app icon
+   - `splash.png` — at least 2732×2732px for splash screen
+2. If using `icon.png`, copy it to `icon-only.png` for Custom Mode
+3. Run: `pnpm cap:assets` or `npx @capacitor/assets generate --assetPath resources --android`
+
+This generates all required Android icon and splash sizes automatically.
 
 ## Useful Commands
 
