@@ -3,6 +3,7 @@
 @import "./vendors/index.css";
 @import "./components.css";
 @import "./_buttons.css";
+@import "./_profile.css";
 
 html,
 body {

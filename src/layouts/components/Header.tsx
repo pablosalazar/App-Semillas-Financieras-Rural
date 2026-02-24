@@ -32,11 +32,14 @@ export function Header() {
   return (
     <>
       <header className="py-2 px-6 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <Avatar gender={user.gender} className="w-16! h-16!" />
-          <span className="text-xl font-semibold bg-(--cyan) text-white text-shadow-blue px-4 py-1 rounded-full border-3 border-(--yellow)">
-            {displayName(user)}
-          </span>
+        <div className="perfil-header">
+          <div className="avatar-rustico-wrapper">
+            <Avatar
+              gender={user.gender}
+              className="border-0! w-full h-full rounded-full min-w-0 min-h-0"
+            />
+          </div>
+          <span className="nombre-placa">{displayName(user)}</span>
         </div>
         {!isAssessmentPage && (
           <div className="flex items-center gap-6">
@@ -44,7 +47,7 @@ export function Header() {
               <img src={homeImg} alt="Home" className="w-12 cursor-pointer" />
             </Link>
             <button onClick={handleOpen}>
-              <img src={menuImg} alt="Menu" className="w-14 cursor-pointer" />
+              <img src={menuImg} alt="Menu" className="w-12 cursor-pointer" />
             </button>
           </div>
         )}

@@ -67,9 +67,9 @@ export function ModulesSlider() {
   return (
     <div className="relative w-full">
       {/* Slider Container */}
-      <div className="overflow-hidden max-w-4xl mx-auto">
+      <div className="overflow-hidden max-w-4xl mx-auto -mt-[100px]">
         <div
-          className="flex transition-transform duration-500 ease-in-out touch-pan-y"
+          className="flex transition-transform duration-500 ease-in-out touch-pan-y "
           style={{ transform: `translateX(-${currentSlide * 100}%)` }}
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
@@ -118,11 +118,10 @@ export function ModulesSlider() {
       <button
         onClick={goToPrevSlide}
         disabled={currentSlide === 0}
-        className={`absolute left-0 top-1/2 -translate-y-1/2  transition-all ${
-          currentSlide === 0
-            ? "opacity-50 cursor-not-allowed pointer-events-none"
-            : "hover:scale-110"
-        }`}
+        className={`absolute left-0 top-1/2 -translate-y-1/2  transition-all ${currentSlide === 0
+          ? "opacity-50 cursor-not-allowed pointer-events-none"
+          : "hover:scale-110"
+          }`}
         aria-label="Previous slide"
       >
         <img
@@ -135,19 +134,17 @@ export function ModulesSlider() {
       <button
         onClick={goToNextSlide}
         disabled={currentSlide === slides.length - 1}
-        className={`absolute right-0 top-1/2 -translate-y-1/2  transition-all ${
-          currentSlide === slides.length - 1
-            ? "opacity-50 cursor-not-allowed pointer-events-none"
-            : "hover:scale-110"
-        }`}
+        className={`absolute right-0 top-1/2 -translate-y-1/2  transition-all ${currentSlide === slides.length - 1
+          ? "opacity-50 cursor-not-allowed pointer-events-none"
+          : "hover:scale-110"
+          }`}
         aria-label="Next slide"
       >
         <img
           src={arrowRightImg}
           alt="Next"
-          className={`w-16 h-16 ${
-            currentSlide === slides.length - 1 ? "grayscale" : ""
-          }`}
+          className={`w-16 h-16 ${currentSlide === slides.length - 1 ? "grayscale" : ""
+            }`}
         />
       </button>
 
@@ -157,11 +154,10 @@ export function ModulesSlider() {
           <button
             key={index}
             onClick={() => setCurrentSlide(index)}
-            className={`w-3 h-3 rounded-full transition-all ${
-              currentSlide === index
-                ? "bg-(--blue) w-8"
-                : "bg-gray-300 hover:bg-gray-400"
-            }`}
+            className={`w-3 h-3 rounded-full transition-all ${currentSlide === index
+              ? "bg-(--blue) w-8"
+              : "bg-gray-300 hover:bg-gray-400"
+              }`}
             aria-label={`Go to slide ${index + 1}`}
           />
         ))}
