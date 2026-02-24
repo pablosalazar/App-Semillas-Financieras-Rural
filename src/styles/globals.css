@@ -2,6 +2,7 @@
 @import "./variables.css";
 @import "./vendors/index.css";
 @import "./components.css";
+@import "./_buttons.css";
 
 html,
 body {

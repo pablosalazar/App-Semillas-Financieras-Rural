@@ -19,7 +19,10 @@ export function UserSummary() {
         <UserProfileCard user={user} />
 
         <div className="text-center">
-          <button onClick={logout} className="btn btn-outline-red">
+          <button
+            onClick={logout}
+            className="btn-rustico btn-rustico-md btn-rustico-amarillo btn-rustico-inline items-center justify-center gap-2 whitespace-nowrap flex! mx-auto"
+          >
             <LogOut />
             Cerrar sesión
           </button>

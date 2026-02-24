@@ -2,8 +2,8 @@ import type { CapacitorConfig } from "@capacitor/cli";
 import { KeyboardResize } from "@capacitor/keyboard";
 
 const config: CapacitorConfig = {
-  appId: "com.semillasfinancieras.urbano",
-  appName: "Semillas Financieras Urbano",
+  appId: "com.semillasfinancieras.rural",
+  appName: "Semillas Financieras Rural",
   webDir: "dist",
   server: {
     androidScheme: "https",

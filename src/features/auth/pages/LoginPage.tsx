@@ -48,14 +48,14 @@ export function LoginPage() {
           type="submit"
           form="login-form"
           disabled={isPending}
-          className="btn btn-orange btn-full"
+          className="btn-rustico btn-rustico-lg btn-rustico-amarillo"
         >
           {isPending ? "Ingresando..." : "Ingresar"}
         </button>
       </div>
       <div className="text-center space-y-4">
         <p className="text-blue font-semibold">¿Aun no tienes cuenta?</p>
-        <Link to="/register" className=" btn btn-orange">
+        <Link to="/register" className="btn-rustico btn-rustico-lg btn-rustico-azul btn-rustico-inline inline-block">
           Registrarme
         </Link>
       </div>

@@ -40,7 +40,7 @@ export function RegisterPage() {
           type="submit"
           form="register-form"
           disabled={isPending}
-          className="btn btn-orange mx-auto"
+          className="btn-rustico btn-rustico-lg btn-rustico-amarillo btn-rustico-inline block mx-auto"
         >
           {isPending ? "Registrando..." : "Registrarme"}
         </button>

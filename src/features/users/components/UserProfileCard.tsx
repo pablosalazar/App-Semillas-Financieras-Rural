@@ -40,7 +40,10 @@ export function UserProfileCard({ user }: UserProfileCardProps) {
           <div className="font-bold">{user.phone}</div>
         </div>
       </div>
-      <Link to="/profile" className="btn btn-blue btn-full">
+      <Link
+        to="/profile"
+        className="btn-rustico btn-rustico-md btn-rustico-azul"
+      >
         Editar perfil
       </Link>
     </div>

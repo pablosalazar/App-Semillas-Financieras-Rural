@@ -1,0 +1,126 @@
+/* ============================================
+   RUSTIC BUTTONS
+   Dedicated styles for rustic-style buttons
+   ============================================ */
+
+/* Base rustic button (use on button or a/Link) */
+.btn-rustico {
+  font-weight: 700;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s ease;
+  text-align: center;
+  letter-spacing: 0.5px;
+  user-select: none;
+  inline-size: 100%;
+  text-decoration: none;
+  display: inline-block;
+}
+
+/* Subtle texture overlay */
+.btn-rustico::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image:
+    linear-gradient(45deg, rgba(0, 0, 0, 0.15) 1px, transparent 1px),
+    linear-gradient(-45deg, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.12;
+}
+
+/* Size: large (default) */
+.btn-rustico-lg {
+  padding: 16px 42px;
+  border-radius: 45px;
+  font-size: 24px;
+  border: 3px solid;
+}
+
+/* Size: medium */
+.btn-rustico-md {
+  padding: 12px 28px;
+  border-radius: 32px;
+  font-size: 18px;
+  border: 2px solid;
+}
+
+/* Size: small */
+.btn-rustico-sm {
+  padding: 8px 18px;
+  border-radius: 24px;
+  font-size: 14px;
+  border: 2px solid;
+}
+
+/* Yellow / Amarillo variant (primary action) */
+.btn-rustico-amarillo {
+  background: linear-gradient(to bottom,
+      #f7c43a 0%,
+      #f0b429 60%,
+      #d89d1c 100%);
+  border-color: #8b5a00;
+  box-shadow:
+    0 6px 0 #8b5a00,
+    0 10px 15px rgba(0, 0, 0, 0.25),
+    inset 0 2px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.15);
+  color: #4d3200;
+}
+
+.btn-rustico-amarillo:active {
+  transform: translateY(4px);
+  box-shadow:
+    0 2px 0 #8b5a00,
+    0 6px 10px rgba(0, 0, 0, 0.25),
+    inset 0 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Blue / Azul variant (secondary action) */
+.btn-rustico-azul {
+  background: linear-gradient(to bottom,
+      #2cb2e2 0%,
+      #1995c8 60%,
+      #147aa3 100%);
+  border-color: #0d4f6b;
+  box-shadow:
+    0 6px 0 #0d4f6b,
+    0 10px 15px rgba(0, 0, 0, 0.25),
+    inset 0 2px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.15);
+  color: white;
+}
+
+.btn-rustico-azul:active {
+  transform: translateY(4px);
+  box-shadow:
+    0 2px 0 #0d4f6b,
+    0 6px 10px rgba(0, 0, 0, 0.25),
+    inset 0 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Disabled state */
+.btn-rustico:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-rustico:disabled:active {
+  transform: none;
+}
+
+/* Inline / auto width (for links or when full width not needed) */
+.btn-rustico-inline {
+  inline-size: auto;
+}
+
+/* Responsive: lg scales down on small screens */
+@media (max-width: 480px) {
+  .btn-rustico-lg {
+    font-size: 20px;
+    padding: 14px 28px;
+  }
+}
