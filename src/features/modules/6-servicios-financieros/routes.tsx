@@ -3,17 +3,12 @@ import { lazy } from "react";
 
 const Intro = lazy(() => import("./pages/Intro"));
 const Instructions = lazy(() => import("./pages/Instructions"));
+const Video1 = lazy(() => import("./pages/Video1"));
+const Video2 = lazy(() => import("./pages/Video2"));
+const Video3 = lazy(() => import("./pages/Video3"));
 const Activity = lazy(() => import("./pages/Activity"));
 const Feedback = lazy(() => import("./pages/Feedback"));
 const Reward = lazy(() => import("./pages/Reward"));
-const SavingsProductsVideo = lazy(() => import("./pages/SavingsProductsVideo"));
-const CreditProductsVideo = lazy(() => import("./pages/CreditProductsVideo"));
-const InsuranceProductsVideo = lazy(
-  () => import("./pages/InsuranceProductsVideo")
-);
-const FinancialChannelsVideo = lazy(
-  () => import("./pages/FinancialChannelsVideo")
-);
 
 export const serviciosFinancierosRoutes: ModuleRoutes = {
   basePath: "productos-y-servicios-financieros",
@@ -23,20 +18,16 @@ export const serviciosFinancierosRoutes: ModuleRoutes = {
       element: <Intro />,
     },
     {
-      path: "productos-ahorro",
-      element: <SavingsProductsVideo />,
+      path: "video-1",
+      element: <Video1 />,
     },
     {
-      path: "productos-credito",
-      element: <CreditProductsVideo />,
+      path: "video-2",
+      element: <Video2 />,
     },
     {
-      path: "productos-seguro",
-      element: <InsuranceProductsVideo />,
-    },
-    {
-      path: "canales-financieros",
-      element: <FinancialChannelsVideo />,
+      path: "video-3",
+      element: <Video3 />,
     },
     {
       path: "instrucciones",

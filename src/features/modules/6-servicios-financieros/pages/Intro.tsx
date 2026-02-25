@@ -8,7 +8,7 @@ export default function Intro() {
     <ModulePageLayout title="Servicios Financieros">
       <VideoPlayerCard
         src={introVideo}
-        nextRoute={SERVICIOS_FINANCIEROS_PATHS.PRODUCTS_SAVING}
+        nextRoute={SERVICIOS_FINANCIEROS_PATHS.VIDEO_1}
         showControls={true}
       />
     </ModulePageLayout>
