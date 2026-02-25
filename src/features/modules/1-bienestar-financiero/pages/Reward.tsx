@@ -5,15 +5,7 @@ import { useBienestarFinanciero } from "../context/BienestarFinancieroContext";
 import { BIENESTAR_FINANCIERO_PATHS } from "../constants/paths";
 import { useNavigate } from "react-router";
 import goldVideo from "@/assets/videos/awards/gold.mp4";
-import silverVideo from "@/assets/videos/awards/silver.mp4";
-import bronzeVideo from "@/assets/videos/awards/bronze.mp4";
 import applauseSound from "@/assets/sounds/applause.mp3";
-
-function getAwardVideo(score: number): string {
-  if (score >= 15) return goldVideo;
-  if (score >= 7) return silverVideo;
-  return bronzeVideo;
-}
 
 export default function Reward() {
   const { score } = useBienestarFinanciero();
@@ -50,12 +42,10 @@ export default function Reward() {
     return null;
   }
 
-  const awardVideo = getAwardVideo(score);
-
   return (
     <ModulePageLayout title="Bienestar Financiero">
       <VideoPlayerCard
-        src={awardVideo}
+        src={goldVideo}
         nextRoute="/home"
         showControls={true}
         autoRedirect={false}

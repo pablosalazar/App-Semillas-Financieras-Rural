@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo, memo, useRef, useEffect } from "react";
 import { ModulePageLayout } from "@/shared/components/ModulePageLayout";
 import { useNavigate } from "react-router";
 import { TENTACIONES_PATHS } from "./constants/paths";
@@ -20,6 +20,7 @@ import img14 from "../assets/images/14_vivienda.png";
 import img15 from "../assets/images/15_aseo.png";
 import canasta1 from "../assets/images/canasta_1.png";
 import canasta2 from "../assets/images/canasta_2.png";
+import "./Activity.css";
 
 const IMAGE_MAP: Record<string, string> = {
   "01_mercado.png": img01,
@@ -182,6 +183,40 @@ function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
+/** Componente memoizado para items dentro de las canastas - evita re-renders innecesarios */
+const BasketItem = memo(function BasketItem({
+  item,
+  onRemove,
+}: {
+  item: DragItem;
+  onRemove: (id: string) => void;
+}) {
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => onRemove(item.id)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onRemove(item.id);
+        }
+      }}
+      className="flex flex-col items-center p-1 rounded hover:bg-white/80 active:bg-white touch-manipulation cursor-pointer"
+    >
+      <img
+        src={IMAGE_MAP[item.image]}
+        alt={item.label}
+        className="w-10 h-10 object-contain"
+        loading="lazy"
+      />
+      <span className="text-[10px] text-gray-600 max-w-[50px] truncate">
+        {item.label}
+      </span>
+    </div>
+  );
+});
+
 const SCORE_MESSAGES = {
   low: "Recuerde: las necesidades son lo que necesitamos para vivir bien (alimentación, educación, salud, vivienda). Los deseos podemos postergarlos o reducirlos para ahorrar.",
   medium:
@@ -198,8 +233,171 @@ export default function Activity() {
   const placedCount = Object.keys(assignments).length;
   const allPlaced = placedCount === ITEMS.length;
 
-  // Solo mostramos un elemento a la vez: el siguiente por colocar (según el orden mezclado)
-  const currentItem = shuffledItems.find((i) => !(i.id in assignments));
+  // Refs para touch drag (móvil/tablet)
+  const ghostRef = useRef<HTMLDivElement | null>(null);
+  const rafIdRef = useRef<number | null>(null);
+  const lastTouchRef = useRef<{ x: number; y: number } | null>(null);
+  const basketNecesidadesRef = useRef<HTMLDivElement>(null);
+  const basketDeseosRef = useRef<HTMLDivElement>(null);
+
+  // Memoizar valores derivados para evitar cálculos en cada render
+  const currentItem = useMemo(
+    () => shuffledItems.find((i) => !(i.id in assignments)),
+    [shuffledItems, assignments]
+  );
+
+  const itemsInNecesidades = useMemo(
+    () => shuffledItems.filter((i) => assignments[i.id] === "necesidades"),
+    [shuffledItems, assignments]
+  );
+
+  const itemsInDeseos = useMemo(
+    () => shuffledItems.filter((i) => assignments[i.id] === "deseos"),
+    [shuffledItems, assignments]
+  );
+
+  // Callbacks estables
+  const handlePlaceInBasket = useCallback(
+    (basket: BasketType) => {
+      if (currentItem)
+        setAssignments((prev) => ({ ...prev, [currentItem.id]: basket }));
+    },
+    [currentItem]
+  );
+
+  const handleRemoveFromBasket = useCallback((itemId: string) => {
+    setAssignments((prev) => {
+      const next = { ...prev };
+      delete next[itemId];
+      return next;
+    });
+  }, []);
+
+  // Ref para evitar closure obsoleta en touch handlers
+  const currentItemRef = useRef(currentItem);
+  currentItemRef.current = currentItem;
+
+  // Touch drag: ghost que sigue el dedo (patrón que funciona en tablet)
+  const createGhost = useCallback(
+    (item: DragItem, x: number, y: number, width: number, height: number) => {
+      const ghost = document.createElement("div");
+      ghost.className = "tentaciones-touch-ghost";
+      const imgSrc = IMAGE_MAP[item.image];
+      ghost.innerHTML = `
+        <img src="${imgSrc}" alt="${item.label}" class="tentaciones-ghost-img" />
+        <span class="tentaciones-ghost-label">${item.label}</span>
+      `;
+      ghost.style.cssText = `
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: ${width}px;
+        min-height: ${height}px;
+        transform: translate3d(${x}px, ${y}px, 0) translate(-50%, -50%) scale(1.05);
+        will-change: transform;
+        z-index: 9999;
+        pointer-events: none;
+        opacity: 0.95;
+      `;
+      document.body.appendChild(ghost);
+      ghostRef.current = ghost;
+      lastTouchRef.current = { x, y };
+    },
+    []
+  );
+
+  const removeGhost = useCallback(() => {
+    if (rafIdRef.current !== null) {
+      cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = null;
+    }
+    lastTouchRef.current = null;
+    if (ghostRef.current?.parentNode) {
+      document.body.removeChild(ghostRef.current);
+      ghostRef.current = null;
+    }
+  }, []);
+
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      const item = currentItemRef.current;
+      if (!item) return;
+
+      const touch = e.touches[0];
+      const cardEl = e.currentTarget as HTMLElement;
+      const rect = cardEl.getBoundingClientRect();
+
+      createGhost(item, touch.clientX, touch.clientY, rect.width, rect.height);
+
+      const onTouchMove = (ev: TouchEvent) => {
+        ev.preventDefault();
+        const t = ev.touches[0];
+        lastTouchRef.current = { x: t.clientX, y: t.clientY };
+        if (rafIdRef.current === null) {
+          rafIdRef.current = requestAnimationFrame(() => {
+            rafIdRef.current = null;
+            const pos = lastTouchRef.current;
+            if (pos && ghostRef.current) {
+              ghostRef.current.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0) translate(-50%, -50%) scale(1.05)`;
+            }
+          });
+        }
+      };
+
+      const onTouchEnd = (ev: TouchEvent) => {
+        const t = ev.changedTouches[0];
+        const pos = { x: t.clientX, y: t.clientY };
+        let targetBasket: BasketType | null = null;
+
+        if (basketNecesidadesRef.current) {
+          const r = basketNecesidadesRef.current.getBoundingClientRect();
+          if (
+            pos.x >= r.left &&
+            pos.x <= r.right &&
+            pos.y >= r.top &&
+            pos.y <= r.bottom
+          ) {
+            targetBasket = "necesidades";
+          }
+        }
+        if (!targetBasket && basketDeseosRef.current) {
+          const r = basketDeseosRef.current.getBoundingClientRect();
+          if (
+            pos.x >= r.left &&
+            pos.x <= r.right &&
+            pos.y >= r.top &&
+            pos.y <= r.bottom
+          ) {
+            targetBasket = "deseos";
+          }
+        }
+
+        document.removeEventListener("touchmove", onTouchMove, { capture: true });
+        document.removeEventListener("touchend", onTouchEnd, { capture: true });
+        document.removeEventListener("touchcancel", onTouchEnd, {
+          capture: true,
+        });
+        removeGhost();
+
+        if (targetBasket && currentItemRef.current) {
+          setAssignments((prev) => ({
+            ...prev,
+            [currentItemRef.current!.id]: targetBasket!,
+          }));
+        }
+      };
+
+      document.addEventListener("touchmove", onTouchMove, {
+        passive: false,
+        capture: true,
+      });
+      document.addEventListener("touchend", onTouchEnd, { capture: true });
+      document.addEventListener("touchcancel", onTouchEnd, { capture: true });
+    },
+    [createGhost, removeGhost]
+  );
+
+  useEffect(() => () => removeGhost(), [removeGhost]);
 
   const handleDrop = useCallback(
     (basket: BasketType) => (e: React.DragEvent) => {
@@ -215,34 +413,36 @@ export default function Activity() {
     e.dataTransfer.dropEffect = "move";
   }, []);
 
-  const handleVerResultado = () => {
-    setShowResult(true);
-  };
+  const handleVerResultado = useCallback(() => setShowResult(true), []);
+  const handleContinuar = useCallback(
+    () => navigate(TENTACIONES_PATHS.FEEDBACK),
+    [navigate]
+  );
 
-  const handleContinuar = () => {
-    navigate(TENTACIONES_PATHS.FEEDBACK);
-  };
-
-  const correctCount = Object.entries(assignments).filter(
-    ([id, basket]) => ITEMS.find((i) => i.id === id)?.correctBasket === basket
-  ).length;
-
-  const mistakes = Object.entries(assignments)
-    .map(([id, basket]) => {
-      const item = ITEMS.find((i) => i.id === id);
-      if (!item || item.correctBasket === basket) return null;
-      const feedback =
-        basket === "necesidades" ? item.feedbackNecesidad : item.feedbackDeseo;
-      return { item, feedback };
-    })
-    .filter((m): m is { item: DragItem; feedback: string } => m !== null);
-
-  const scoreMessage =
-    correctCount <= 5
-      ? SCORE_MESSAGES.low
-      : correctCount <= 10
-        ? SCORE_MESSAGES.medium
-        : SCORE_MESSAGES.high;
+  // Memoizar resultado (solo se usa cuando showResult)
+  const { correctCount, mistakes, scoreMessage } = useMemo(() => {
+    const correct = Object.entries(assignments).filter(
+      ([id, basket]) => ITEMS.find((i) => i.id === id)?.correctBasket === basket
+    ).length;
+    const errs = Object.entries(assignments)
+      .map(([id, basket]) => {
+        const item = ITEMS.find((i) => i.id === id);
+        if (!item || item.correctBasket === basket) return null;
+        const feedback =
+          basket === "necesidades"
+            ? item.feedbackNecesidad
+            : item.feedbackDeseo;
+        return { item, feedback };
+      })
+      .filter((m): m is { item: DragItem; feedback: string } => m !== null);
+    const msg =
+      correct <= 5
+        ? SCORE_MESSAGES.low
+        : correct <= 10
+          ? SCORE_MESSAGES.medium
+          : SCORE_MESSAGES.high;
+    return { correctCount: correct, mistakes: errs, scoreMessage: msg };
+  }, [assignments]);
 
   if (showResult) {
     return (
@@ -273,6 +473,7 @@ export default function Activity() {
                           src={IMAGE_MAP[item.image]}
                           alt={item.label}
                           className="w-12 h-12 object-contain shrink-0"
+                          loading="lazy"
                         />
                         <div>
                           <span className="font-medium text-gray-800">
@@ -303,8 +504,8 @@ export default function Activity() {
     <ModulePageLayout title="Tentaciones">
       <div className="space-y-4 mt-4 pb-12 max-w-2xl mx-auto px-2">
         <p className="text-sm text-gray-600 text-center">
-          Arrastre cada elemento a la canasta que corresponda: Necesidades o
-          Deseos.
+          Arrastre o toque la canasta donde corresponda cada elemento:
+          Necesidades o Deseos.
         </p>
         <p className="text-sm font-medium text-(--blue) text-center">
           Elemento {placedCount + 1} de {ITEMS.length}
@@ -319,7 +520,8 @@ export default function Activity() {
                 e.dataTransfer.setData("item-id", currentItem.id);
                 e.dataTransfer.effectAllowed = "move";
               }}
-              className="flex flex-col items-center gap-2 cursor-grab active:cursor-grabbing p-4 rounded-xl hover:bg-white/80 transition-colors touch-manipulation border-2 border-dashed border-(--blue)"
+              onTouchStart={handleTouchStart}
+              className="tentaciones-draggable-item flex flex-col items-center gap-2 cursor-grab active:cursor-grabbing p-4 rounded-xl hover:bg-white/80 transition-colors border-2 border-dashed border-(--blue)"
             >
               <img
                 src={IMAGE_MAP[currentItem.image]}
@@ -337,97 +539,81 @@ export default function Activity() {
           )}
         </div>
 
-        {/* Baskets */}
+        {/* Baskets - drag & drop desktop, touch drag móvil, tap fallback */}
         <div className="grid grid-cols-2 gap-4">
           <div
+            ref={basketNecesidadesRef}
+            role="button"
+            tabIndex={0}
+            onClick={() => handlePlaceInBasket("necesidades")}
+            onKeyDown={(e) => {
+              if ((e.key === "Enter" || e.key === " ") && currentItem) {
+                e.preventDefault();
+                handlePlaceInBasket("necesidades");
+              }
+            }}
             onDrop={handleDrop("necesidades")}
             onDragOver={handleDragOver}
-            className="relative min-h-[180px] rounded-2xl border-2 border-dashed border-(--blue) bg-blue-50/50 flex flex-col items-center justify-start pt-2 pb-4"
+            className={`relative min-h-[180px] rounded-2xl border-2 border-dashed border-(--blue) bg-blue-50/50 flex flex-col items-center justify-start pt-2 pb-4 touch-manipulation select-none ${currentItem ? "cursor-pointer active:scale-[0.98] transition-transform" : "opacity-70"}`}
           >
             <img
               src={canasta1}
               alt="Necesidades"
               className="w-20 h-20 object-contain mb-1"
+              loading="lazy"
             />
             <span className="font-semibold text-(--blue) text-sm">
               Necesidades
             </span>
-            <div className="flex flex-wrap justify-center gap-1 mt-2 px-2">
-              {shuffledItems
-                .filter((i) => assignments[i.id] === "necesidades")
-                .map((item) => (
-                  <div
-                    key={item.id}
-                    draggable
-                    onDragStart={(e) => {
-                      e.dataTransfer.setData("item-id", item.id);
-                      e.dataTransfer.effectAllowed = "move";
-                    }}
-                    onClick={() =>
-                      setAssignments((prev) => {
-                        const next = { ...prev };
-                        delete next[item.id];
-                        return next;
-                      })
-                    }
-                    className="flex flex-col items-center cursor-grab active:cursor-grabbing p-1 rounded hover:bg-white/80"
-                  >
-                    <img
-                      src={IMAGE_MAP[item.image]}
-                      alt={item.label}
-                      className="w-10 h-10 object-contain"
-                    />
-                    <span className="text-[10px] text-gray-600 max-w-[50px] truncate">
-                      {item.label}
-                    </span>
-                  </div>
-                ))}
+            <div
+              className="flex flex-wrap justify-center gap-1 mt-2 px-2"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {itemsInNecesidades.map((item) => (
+                <BasketItem
+                  key={item.id}
+                  item={item}
+                  onRemove={handleRemoveFromBasket}
+                />
+              ))}
             </div>
           </div>
 
           <div
+            ref={basketDeseosRef}
+            role="button"
+            tabIndex={0}
+            onClick={() => handlePlaceInBasket("deseos")}
+            onKeyDown={(e) => {
+              if ((e.key === "Enter" || e.key === " ") && currentItem) {
+                e.preventDefault();
+                handlePlaceInBasket("deseos");
+              }
+            }}
             onDrop={handleDrop("deseos")}
             onDragOver={handleDragOver}
-            className="relative min-h-[180px] rounded-2xl border-2 border-dashed border-orange-400 bg-orange-50/50 flex flex-col items-center justify-start pt-2 pb-4"
+            className={`relative min-h-[180px] rounded-2xl border-2 border-dashed border-orange-400 bg-orange-50/50 flex flex-col items-center justify-start pt-2 pb-4 touch-manipulation select-none ${currentItem ? "cursor-pointer active:scale-[0.98] transition-transform" : "opacity-70"}`}
           >
             <img
               src={canasta2}
               alt="Deseos"
               className="w-20 h-20 object-contain mb-1"
+              loading="lazy"
             />
             <span className="font-semibold text-orange-700 text-sm">
               Deseos
             </span>
-            <div className="flex flex-wrap justify-center gap-1 mt-2 px-2">
-              {shuffledItems
-                .filter((i) => assignments[i.id] === "deseos")
-                .map((item) => (
-                  <div
-                    key={item.id}
-                    draggable
-                    onDragStart={(e) => {
-                      e.dataTransfer.setData("item-id", item.id);
-                      e.dataTransfer.effectAllowed = "move";
-                    }}
-                    onClick={() =>
-                      setAssignments((prev) => {
-                        const next = { ...prev };
-                        delete next[item.id];
-                        return next;
-                      })
-                    }
-                    className="flex flex-col items-center cursor-grab active:cursor-grabbing p-1 rounded hover:bg-white/80"
-                  >
-                    <img
-                      src={IMAGE_MAP[item.image]}
-                      alt={item.label}
-                      className="w-10 h-10 object-contain"
-                    />
-                    <span className="text-[10px] text-gray-600 max-w-[50px] truncate">
-                      {item.label}
-                    </span>
-                  </div>
-                ))}
+            <div
+              className="flex flex-wrap justify-center gap-1 mt-2 px-2"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {itemsInDeseos.map((item) => (
+                <BasketItem
+                  key={item.id}
+                  item={item}
+                  onRemove={handleRemoveFromBasket}
+                />
+              ))}
             </div>
           </div>
         </div>
