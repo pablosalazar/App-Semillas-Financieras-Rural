@@ -12,8 +12,10 @@ export function ModulesSlider() {
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const { learningProgress } = useLearningProgressContext();
 
-  // Get modules with their unlock status
-  const modulesWithStatus = getModulesWithStatus(learningProgress ?? null);
+  // Get modules with their unlock status (all enabled)
+  const modulesWithStatus = getModulesWithStatus(learningProgress ?? null).map(
+    (m) => ({ ...m, isUnlocked: true })
+  );
 
   // Split modules into slides: first 6, then remaining 5
   const slides = [

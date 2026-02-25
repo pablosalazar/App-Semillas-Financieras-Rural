@@ -1,32 +1,14 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { ModulePageLayout } from "@/shared/components/ModulePageLayout";
-import { Modal } from "@/shared/components/ui/Modal";
-import { TextInput } from "@/shared/components/ui/TextInput";
-import { SelectInput } from "@/shared/components/ui/SelectInput";
-import { Trash2 } from "lucide-react";
+import { Trash2, Plus } from "lucide-react";
 import { useNavigate } from "react-router";
 import { YO_LLEVO_MIS_CUENTAS_PATHS } from "../constants/paths";
 
-interface Expense {
+interface TableRow {
   id: string;
-  name: string;
-  amount: string;
+  concept: string;
+  value: string; // raw number string for input
 }
-
-const MONTHS = [
-  { value: "enero", label: "Enero" },
-  { value: "febrero", label: "Febrero" },
-  { value: "marzo", label: "Marzo" },
-  { value: "abril", label: "Abril" },
-  { value: "mayo", label: "Mayo" },
-  { value: "junio", label: "Junio" },
-  { value: "julio", label: "Julio" },
-  { value: "agosto", label: "Agosto" },
-  { value: "septiembre", label: "Septiembre" },
-  { value: "octubre", label: "Octubre" },
-  { value: "noviembre", label: "Noviembre" },
-  { value: "diciembre", label: "Diciembre" },
-];
 
 // Format number as currency
 const formatCurrency = (value: number): string => {
@@ -43,276 +25,373 @@ const parseCurrency = (value: string): number => {
   return parseInt(value.replace(/[^\d]/g, "")) || 0;
 };
 
+const formatInputCurrency = (value: string): string => {
+  if (!value) return "";
+  const numValue = parseInt(value);
+  if (isNaN(numValue)) return "";
+  return formatCurrency(numValue);
+};
+
+// Pre-filled data from PDF
+const INITIAL_FIXED_INCOME: TableRow[] = [
+  { id: "1", concept: "Venta mensual de leche", value: "600000" },
+  { id: "2", concept: "Sueldo fijo", value: "1000000" },
+];
+
+const INITIAL_VARIABLE_INCOME: TableRow[] = [
+  { id: "3", concept: "Venta de cosechas ocasionales", value: "50000" },
+  { id: "4", concept: "Trabajos por días", value: "60000" },
+];
+
+const INITIAL_FIXED_EXPENSES: TableRow[] = [
+  { id: "5", concept: "Alimentación", value: "400000" },
+  { id: "6", concept: "Servicios (agua, energía, gas)", value: "150000" },
+];
+
+const INITIAL_VARIABLE_EXPENSES: TableRow[] = [
+  { id: "7", concept: "Medicinas", value: "30000" },
+  { id: "8", concept: "Ropa", value: "50000" },
+];
+
+function IncomeExpenseTable({
+  title,
+  rows,
+  onAddRow,
+  onUpdateRow,
+  onDeleteRow,
+}: {
+  title: string;
+  rows: TableRow[];
+  onAddRow: () => void;
+  onUpdateRow: (id: string, field: "concept" | "value", value: string) => void;
+  onDeleteRow: (id: string) => void;
+}) {
+  const subtotal = rows.reduce((sum, row) => sum + parseCurrency(row.value), 0);
+
+  return (
+    <div className="flex flex-col gap-3">
+      <h3 className="font-semibold text-lg text-gray-800">{title}</h3>
+      <div className="border border-gray-200 rounded-lg overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="text-left p-2 font-semibold">Concepto</th>
+              <th className="text-right p-2 font-semibold w-28">Valor ($)</th>
+              <th className="w-10" />
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.id} className="border-t border-gray-100 hover:bg-gray-50">
+                <td className="p-2">
+                  <input
+                    type="text"
+                    value={row.concept}
+                    onChange={(e) => onUpdateRow(row.id, "concept", e.target.value)}
+                    className="w-full px-2 py-1 border border-gray-200 rounded text-gray-800"
+                    placeholder="Concepto"
+                  />
+                </td>
+                <td className="p-2">
+                  <input
+                    type="text"
+                    value={formatInputCurrency(row.value)}
+                    onChange={(e) => onUpdateRow(row.id, "value", e.target.value.replace(/[^\d]/g, ""))}
+                    className="w-full px-2 py-1 border border-gray-200 rounded text-right"
+                    placeholder="$0"
+                  />
+                </td>
+                <td className="p-2">
+                  <button
+                    onClick={() => onDeleteRow(row.id)}
+                    className="p-1.5 text-red-500 hover:bg-red-50 rounded"
+                    aria-label="Eliminar"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex justify-between items-center">
+        <span className="font-medium text-gray-700">Subtotal {title.toLowerCase()}:</span>
+        <span className="font-semibold">{formatCurrency(subtotal)}</span>
+      </div>
+      <button
+        type="button"
+        onClick={onAddRow}
+        className="flex items-center gap-2 text-(--blue) hover:underline text-sm font-medium"
+      >
+        <Plus className="w-4 h-4" />
+        Agregar fila
+      </button>
+    </div>
+  );
+}
+
 export default function Activity() {
   const navigate = useNavigate();
-  const [month, setMonth] = useState("enero");
-  const [income, setIncome] = useState("");
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [savings, setSavings] = useState<number | null>(null);
-  const [showExpenseModal, setShowExpenseModal] = useState(false);
-  const [showSavingsModal, setShowSavingsModal] = useState(false);
-  const [expenseAmount, setExpenseAmount] = useState("");
-  const expenseNameRef = useRef<HTMLInputElement>(null);
+  const [block, setBlock] = useState<1 | 2 | 3>(1);
 
-  const handleAddExpense = () => {
-    const name = expenseNameRef.current?.value.trim() || "";
-    const amount = expenseAmount;
+  const [fixedIncome, setFixedIncome] = useState<TableRow[]>(() =>
+    INITIAL_FIXED_INCOME.map((r) => ({ ...r }))
+  );
+  const [variableIncome, setVariableIncome] = useState<TableRow[]>(() =>
+    INITIAL_VARIABLE_INCOME.map((r) => ({ ...r }))
+  );
+  const [fixedExpenses, setFixedExpenses] = useState<TableRow[]>(() =>
+    INITIAL_FIXED_EXPENSES.map((r) => ({ ...r }))
+  );
+  const [variableExpenses, setVariableExpenses] = useState<TableRow[]>(() =>
+    INITIAL_VARIABLE_EXPENSES.map((r) => ({ ...r }))
+  );
 
-    if (name && amount && parseCurrency(amount) > 0) {
-      const newExpense: Expense = {
-        id: Date.now().toString(),
-        name,
-        amount, // Store as raw number string
-      };
-      setExpenses((prev) => [...prev, newExpense]);
-
-      // Clear inputs
-      if (expenseNameRef.current) expenseNameRef.current.value = "";
-      setExpenseAmount("");
-
-      setShowExpenseModal(false);
-    }
-  };
-
-  const handleDeleteExpense = (id: string) => {
-    setExpenses((prev) => prev.filter((expense) => expense.id !== id));
-  };
-
-  const handleCalculateSavings = () => {
-    const incomeValue = parseCurrency(income);
-
-    if (incomeValue > 0 && expenses.length > 0) {
-      const totalExpenses = expenses.reduce((sum, expense) => {
-        return sum + parseCurrency(expense.amount);
-      }, 0);
-
-      const calculatedSavings = incomeValue - totalExpenses;
-      setSavings(calculatedSavings);
-      setShowSavingsModal(true);
-    }
-  };
-
-  const handleIncomeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/[^\d]/g, "");
-    setIncome(value);
-  };
-
-  const handleExpenseAmountChange = (
-    e: React.ChangeEvent<HTMLInputElement>
+  const addRow = (
+    setter: React.Dispatch<React.SetStateAction<TableRow[]>>
   ) => {
-    const value = e.target.value.replace(/[^\d]/g, "");
-    setExpenseAmount(value);
+    setter((prev) => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        concept: "",
+        value: "0",
+      },
+    ]);
   };
 
-  const formatInputCurrency = (value: string): string => {
-    if (!value) return "";
-    const numValue = parseInt(value);
-    if (isNaN(numValue)) return "";
-    return formatCurrency(numValue);
+  const updateRow = (
+    setter: React.Dispatch<React.SetStateAction<TableRow[]>>,
+    id: string,
+    field: "concept" | "value",
+    value: string
+  ) => {
+    setter((prev) =>
+      prev.map((row) =>
+        row.id === id ? { ...row, [field]: value } : row
+      )
+    );
   };
+
+  const deleteRow = (
+    setter: React.Dispatch<React.SetStateAction<TableRow[]>>,
+    id: string
+  ) => {
+    setter((prev) => prev.filter((row) => row.id !== id));
+  };
+
+  const totalIncome =
+    fixedIncome.reduce((s, r) => s + parseCurrency(r.value), 0) +
+    variableIncome.reduce((s, r) => s + parseCurrency(r.value), 0);
+
+  const totalExpenses =
+    fixedExpenses.reduce((s, r) => s + parseCurrency(r.value), 0) +
+    variableExpenses.reduce((s, r) => s + parseCurrency(r.value), 0);
+
+  const dineroDisponible = totalIncome - totalExpenses;
 
   return (
     <ModulePageLayout title="Yo llevo mis cuentas">
-      <div className="space-y-6 mt-10">
-        <div className="max-w-4xl mx-auto w-full flex-1">
+      <div className="space-y-8 mt-10 pb-12">
+        <div className="max-w-5xl mx-auto w-full">
           <div className="module-card">
-            <div className="space-y-6">
-              {/* Month and Income Section */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <SelectInput
-                  label="Mes"
-                  options={MONTHS}
-                  value={month}
-                  onChange={(e) => setMonth(e.target.value)}
-                  placeholder="Selecciona un mes"
-                />
-
-                <div className="w-full">
-                  <TextInput
-                    label="Ingreso"
-                    type="text"
-                    value={income ? formatInputCurrency(income) : ""}
-                    onChange={handleIncomeChange}
-                    placeholder="$0"
-                    helperText="*Ingrese el total de ingresos"
+            {block === 1 && (
+              <div className="space-y-8">
+                <h2 className="text-2xl font-bold text-(--blue)">
+                  1. Registre sus ingresos del mes
+                </h2>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <IncomeExpenseTable
+                    title="Ingresos fijos"
+                    rows={fixedIncome}
+                    onAddRow={() => addRow(setFixedIncome)}
+                    onUpdateRow={(id, field, value) =>
+                      updateRow(setFixedIncome, id, field, value)
+                    }
+                    onDeleteRow={(id) => deleteRow(setFixedIncome, id)}
+                  />
+                  <IncomeExpenseTable
+                    title="Ingresos variables"
+                    rows={variableIncome}
+                    onAddRow={() => addRow(setVariableIncome)}
+                    onUpdateRow={(id, field, value) =>
+                      updateRow(setVariableIncome, id, field, value)
+                    }
+                    onDeleteRow={(id) => deleteRow(setVariableIncome, id)}
                   />
                 </div>
+                <div className="flex justify-between items-center pt-4 border-t-2 border-gray-200">
+                  <span className="font-bold text-lg">Total ingresos</span>
+                  <span className="font-bold text-xl text-(--blue)">
+                    {formatCurrency(totalIncome)}
+                  </span>
+                </div>
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => setBlock(2)}
+                    className="btn btn-orange"
+                  >
+                    Continuar con los gastos
+                  </button>
+                </div>
               </div>
+            )}
 
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-between">
-                <button
-                  onClick={() => setShowExpenseModal(true)}
-                  className="btn btn-blue"
-                >
-                  Agregar gastos
-                </button>
-                <button
-                  onClick={handleCalculateSavings}
-                  className="btn btn-orange"
-                  disabled={!income || expenses.length === 0}
-                >
-                  Calcular
-                </button>
+            {block === 2 && (
+              <div className="space-y-8">
+                <h2 className="text-2xl font-bold text-(--blue)">
+                  2. Registre sus gastos del mes
+                </h2>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <IncomeExpenseTable
+                    title="Gastos fijos"
+                    rows={fixedExpenses}
+                    onAddRow={() => addRow(setFixedExpenses)}
+                    onUpdateRow={(id, field, value) =>
+                      updateRow(setFixedExpenses, id, field, value)
+                    }
+                    onDeleteRow={(id) => deleteRow(setFixedExpenses, id)}
+                  />
+                  <IncomeExpenseTable
+                    title="Gastos variables"
+                    rows={variableExpenses}
+                    onAddRow={() => addRow(setVariableExpenses)}
+                    onUpdateRow={(id, field, value) =>
+                      updateRow(setVariableExpenses, id, field, value)
+                    }
+                    onDeleteRow={(id) => deleteRow(setVariableExpenses, id)}
+                  />
+                </div>
+                <div className="flex justify-between items-center pt-4 border-t-2 border-gray-200">
+                  <span className="font-bold text-lg">Total gastos</span>
+                  <span className="font-bold text-xl text-(--blue)">
+                    {formatCurrency(totalExpenses)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <button
+                    onClick={() => setBlock(1)}
+                    className="btn btn-blue"
+                  >
+                    Volver
+                  </button>
+                  <button
+                    onClick={() => setBlock(3)}
+                    className="btn btn-orange"
+                  >
+                    Calcular dinero disponible
+                  </button>
+                </div>
               </div>
+            )}
 
-              {/* Expenses List */}
-              {expenses.length > 0 && (
-                <div className="space-y-3">
-                  <h3 className="text-xl font-semibold text-gray-800">
-                    Gastos registrados:
-                  </h3>
-                  <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
-                    {expenses.map((expense) => (
-                      <div
-                        key={expense.id}
-                        className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border-2 border-gray-200 hover:border-blue-300 transition-colors"
-                      >
-                        <div className="flex-1">
-                          <p className="font-semibold text-gray-800">
-                            {expense.name}
-                          </p>
-                          <p className="text-lg text-gray-600">
-                            {formatInputCurrency(expense.amount)}
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => handleDeleteExpense(expense.id)}
-                          className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                          aria-label="Eliminar gasto"
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
-                      </div>
-                    ))}
+            {block === 3 && (
+              <div className="space-y-8">
+                <h2 className="text-2xl font-bold text-(--blue)">
+                  3. Su dinero disponible este mes
+                </h2>
+                <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
+                  <p className="text-lg text-gray-700 mb-4">
+                    Dinero disponible = Total ingresos − Total gastos
+                  </p>
+                  <p className="text-lg text-gray-700 mb-2">
+                    <span className="font-medium">Total ingresos:</span>{" "}
+                    {formatCurrency(totalIncome)}
+                  </p>
+                  <p className="text-lg text-gray-700 mb-4">
+                    <span className="font-medium">Total gastos:</span>{" "}
+                    {formatCurrency(totalExpenses)}
+                  </p>
+                  <p className="text-xl font-bold">
+                    <span className="text-gray-700">Dinero disponible: </span>
+                    <span
+                      className={
+                        dineroDisponible > 0
+                          ? "text-green-600"
+                          : dineroDisponible < 0
+                            ? "text-red-600"
+                            : "text-amber-600"
+                      }
+                    >
+                      {formatCurrency(dineroDisponible)}
+                    </span>
+                  </p>
+                </div>
+
+                {/* Feedback según el resultado - PDF */}
+                {dineroDisponible > 0 && (
+                  <div className="bg-green-50 border-2 border-green-200 rounded-xl p-6">
+                    <p className="text-lg text-green-800 font-semibold mb-2">
+                      ¡Muy bien!
+                    </p>
+                    <p className="text-gray-800">
+                      Sus ingresos son mayores que sus gastos, lo que significa
+                      que tiene dinero disponible.
+                    </p>
+                    <p className="text-gray-700 mt-2">
+                      Aproveche esta oportunidad para fijarse una meta de ahorro
+                      mensual. Recuerde: el ahorro constante, por mínimo que
+                      sea, es la base para cumplir sus metas y tener tranquilidad.
+                    </p>
                   </div>
+                )}
+                {dineroDisponible === 0 && (
+                  <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-6">
+                    <p className="text-lg text-amber-800 font-semibold mb-2">
+                      ¡Cuidado!
+                    </p>
+                    <p className="text-gray-800">
+                      Sus ingresos le alcanzan exactamente para cubrir sus gastos.
+                      Esto indica que no tiene dinero disponible al mes.
+                    </p>
+                    <p className="text-gray-700 mt-2">
+                      Es importante que esté atento, pues cualquier gasto extra
+                      podría afectar su estabilidad. Revise sus gastos y busque
+                      formas de reducir los que sean innecesarios para mejorar su
+                      situación financiera.
+                    </p>
+                  </div>
+                )}
+                {dineroDisponible < 0 && (
+                  <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6">
+                    <p className="text-lg text-red-800 font-semibold mb-2">
+                      ¡Peligro!
+                    </p>
+                    <p className="text-gray-800">
+                      Sus gastos son mayores que sus ingresos, lo que significa
+                      que está gastando más de lo que gana.
+                    </p>
+                    <p className="text-gray-700 mt-2">
+                      Es importante revisar en qué puede reducir gastos para
+                      recuperar el equilibrio y evitar endeudarse. No se desanime:
+                      este resultado es una oportunidad para revisar en qué puede
+                      ajustar o reducir gastos innecesarios. Con un mejor control
+                      y planeación, podrá equilibrar sus cuentas y mejorar su
+                      situación mes a mes.
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex justify-between items-center pt-4">
+                  <button
+                    onClick={() => setBlock(2)}
+                    className="btn btn-blue"
+                  >
+                    Volver
+                  </button>
+                  <button
+                    onClick={() => navigate(YO_LLEVO_MIS_CUENTAS_PATHS.FEEDBACK)}
+                    className="btn btn-orange"
+                  >
+                    Finalizar
+                  </button>
                 </div>
-              )}
-
-              {expenses.length === 0 && (
-                <div className="text-center bg-blue-50 border-2 border-blue-200 rounded-xl py-8 text-blue-500">
-                  <p className="text-2xl font-semibold">
-                    No hay gastos registrados
-                  </p>
-                  <p className="text-sm mt-2">
-                    Haz clic en{" "}
-                    <span className="text-blue-500 font-semibold">
-                      Agregar gastos
-                    </span>{" "}
-                    para comenzar
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Add Expense Modal */}
-      <Modal
-        isOpen={showExpenseModal}
-        onClose={() => setShowExpenseModal(false)}
-        size="lg"
-      >
-        <div className="space-y-6 p-4">
-          <h2 className="text-2xl font-bold text-(--blue) text-center">
-            Agregar gastos
-          </h2>
-
-          <div className="space-y-4">
-            <TextInput
-              ref={expenseNameRef}
-              label="Nombre del gasto"
-              placeholder="Ej: Arriendo, mercado..."
-              required
-            />
-
-            <div className="w-full">
-              <TextInput
-                label="Valor"
-                type="text"
-                value={expenseAmount ? formatInputCurrency(expenseAmount) : ""}
-                onChange={handleExpenseAmountChange}
-                placeholder="$0"
-                helperText="Ingrese el valor en números"
-                required
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-4 justify-end pt-4">
-            <button
-              onClick={() => setShowExpenseModal(false)}
-              className="btn btn-blue"
-            >
-              Volver
-            </button>
-            <button onClick={handleAddExpense} className="btn btn-orange">
-              Agregar
-            </button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Savings Result Modal */}
-      <Modal
-        isOpen={showSavingsModal}
-        onClose={() => setShowSavingsModal(false)}
-        size="lg"
-      >
-        <div className="space-y-6 p-4">
-          <h2 className="text-2xl font-bold text-(--blue) text-center">
-            Resultado del cálculo
-          </h2>
-
-          <div className="text-center space-y-4">
-            {savings !== null && savings > 0 ? (
-              <div className="space-y-3">
-                <p className="text-lg text-gray-700">
-                  Usted tiene{" "}
-                  <strong className="text-green-600 text-xl">
-                    {formatCurrency(savings)}
-                  </strong>{" "}
-                  disponibles para ahorrar en{" "}
-                  <strong>
-                    {MONTHS.find((m) => m.value === month)?.label}
-                  </strong>
-                  .
-                </p>
-                <p className="text-gray-600 italic">
-                  Fíjese una meta real de ahorro que pueda mantener mensualmente
-                  y hágalo cada mes.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <p className="text-lg text-gray-700">
-                  Atención: realice ajustes a sus gastos e identifique los
-                  gastos innecesarios que puede eliminar.
-                </p>
-                <p className="text-gray-600 italic">
-                  ¡Esto le ayuda a cumplir su meta de ahorro!
-                </p>
               </div>
             )}
           </div>
-
-          <div className="flex gap-4 justify-end pt-4">
-            <button
-              onClick={() => setShowSavingsModal(false)}
-              className="btn btn-blue"
-            >
-              Volver
-            </button>
-            <button
-              onClick={() => navigate(YO_LLEVO_MIS_CUENTAS_PATHS.FEEDBACK)}
-              className="btn btn-orange"
-            >
-              Finalizar
-            </button>
-          </div>
         </div>
-      </Modal>
+      </div>
     </ModulePageLayout>
   );
 }
