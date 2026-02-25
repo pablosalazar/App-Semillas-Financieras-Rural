@@ -16,7 +16,7 @@ const FinancialChannelsVideo = lazy(
 );
 
 export const serviciosFinancierosRoutes: ModuleRoutes = {
-  basePath: "servicios-financieros",
+  basePath: "productos-y-servicios-financieros",
   routes: [
     {
       path: "",

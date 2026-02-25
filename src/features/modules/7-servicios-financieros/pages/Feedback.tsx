@@ -16,7 +16,7 @@ export default function Feedback() {
     registerProgress({
       userId: user.id,
       moduleProgress: {
-        moduleId: "servicios-financieros",
+        moduleId: "productos-y-servicios-financieros",
         progress: 100,
       },
     });

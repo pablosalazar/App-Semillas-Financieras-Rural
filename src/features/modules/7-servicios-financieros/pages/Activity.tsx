@@ -1,243 +1,155 @@
-import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router";
+import { useState } from "react";
 import { ModulePageLayout } from "@/shared/components/ModulePageLayout";
-import { ProgressBar } from "@/shared/components/ProgressBar";
-import { MATCHING_TERMS } from "../constants/matching-terms";
+import { useNavigate } from "react-router";
 import { SERVICIOS_FINANCIEROS_PATHS } from "../constants/paths";
 import successSound from "@/assets/sounds/success.ogg";
 import failSound from "@/assets/sounds/fail.mp3";
-import "./Activity.css";
 
-interface MatchingTerm {
-  id: string;
-  category: string;
-  term: string;
-  description: string;
-}
+const SCENARIOS = [
+  {
+    id: "maria",
+    context:
+      "En la mañana, María se encuentra trabajando en la finca y nota que la bomba de agua ya no funciona tan bien como antes. Por eso decide empezar a ahorrar para comprar una nueva dentro de 1 año. Necesita una forma de guardar su dinero mes a mes, sin gastarlo y con una meta clara.",
+    question: "¿Qué producto financiero debería usar?",
+    options: [
+      {
+        id: "cuenta-ahorro-programado",
+        text: "Cuenta de ahorro programado",
+        isCorrect: true,
+      },
+      { id: "credito-negocio", text: "Crédito para negocio", isCorrect: false },
+      { id: "bolsillo-digital", text: "Bolsillo digital", isCorrect: false },
+    ],
+    feedbackCorrect:
+      "La cuenta de ahorro programado le permite ahorrar cada mes según una meta y mantener el dinero separado para no gastarlo.",
+    feedbackWrong:
+      "Esta opción no es la más adecuada para el objetivo de María. Inténtelo de nuevo.",
+  },
+  {
+    id: "don-jacinto",
+    context:
+      "Más tarde, al pasar por el camino hacia el cultivo de cacao, se encuentra con Don Jacinto. Él le cuenta que este mes necesita comprar fertilizantes, semillas y herramientas para mejorar su cultivo. No tiene el dinero completo para hacerlo, pero sabe que podrá pagarlo cuando llegue la próxima cosecha.",
+    question: "¿Qué producto financiero debería usar?",
+    options: [
+      {
+        id: "credito-agropecuario",
+        text: "Crédito agropecuario",
+        isCorrect: true,
+      },
+      { id: "cdt", text: "CDT (Certificado de Depósito a Término)", isCorrect: false },
+      { id: "tarjeta-credito", text: "Tarjeta de crédito", isCorrect: false },
+    ],
+    feedbackCorrect:
+      "El crédito agropecuario está diseñado para apoyar actividades del campo y se adapta a los tiempos y necesidades del productor.",
+    feedbackWrong:
+      "Esta opción no es la más adecuada para este objetivo. Inténtelo de nuevo.",
+  },
+  {
+    id: "martha",
+    context:
+      "Al final de la tarde, cuando pasa por el parque principal, se encuentra con Martha, quien acaba de participar en una feria del pueblo vendiendo sus artesanías. Recibió un dinero extra y quiere ponerlo a trabajar para que le genere ganancias de forma segura, ya que no lo necesita hasta el próximo año.",
+    question: "¿Qué producto financiero debería usar?",
+    options: [
+      { id: "cuenta-ahorros", text: "Cuenta de ahorros", isCorrect: false },
+      { id: "credito-educativo", text: "Crédito educativo", isCorrect: false },
+      {
+        id: "cdt",
+        text: "CDT (Certificado de Depósito a Término)",
+        isCorrect: true,
+      },
+    ],
+    feedbackCorrect:
+      "El CDT es una inversión segura donde usted sabe desde el inicio cuánto va a ganar al finalizar el plazo.",
+    feedbackWrong:
+      "Esta opción no es la más adecuada para este objetivo. Inténtelo de nuevo.",
+  },
+];
 
 export default function Activity() {
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [availableTerms, setAvailableTerms] = useState<MatchingTerm[]>([]);
-  const [shuffledTerms, setShuffledTerms] = useState<MatchingTerm[]>([]);
-  const [draggedTerm, setDraggedTerm] = useState<string | null>(null);
-  const [isDropZoneActive, setIsDropZoneActive] = useState(false);
-  const [showFeedback, setShowFeedback] = useState<"success" | "error" | null>(
-    null,
-  );
+  const [showFeedback, setShowFeedback] = useState<"correct" | "wrong" | null>(null);
 
-  // Touch drag state
-  const ghostRef = useRef<HTMLDivElement | null>(null);
-  const dropZoneRef = useRef<HTMLDivElement>(null);
+  const scenario = SCENARIOS[currentIndex];
 
-  // Audio instances
-  const [successAudio] = useState(new Audio(successSound));
-  const [failAudio] = useState(new Audio(failSound));
+  const handleSelect = (option: (typeof scenario.options)[number]) => {
+    if (showFeedback) return;
 
-  // Initialize the activity
-  useEffect(() => {
-    const shuffledQuestions = [...MATCHING_TERMS].sort(
-      () => Math.random() - 0.5,
-    );
-    const shuffledOptions = [...MATCHING_TERMS].sort(() => Math.random() - 0.5);
-    setShuffledTerms(shuffledQuestions);
-    setAvailableTerms(shuffledOptions);
-  }, []);
-
-  const currentQuestion = shuffledTerms[currentIndex];
-
-  // ─── Mouse / Desktop drag handlers ───────────────────────────────────────────
-
-  const handleDragStart = (termId: string) => {
-    setDraggedTerm(termId);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedTerm(null);
-    setIsDropZoneActive(false);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDropZoneActive(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDropZoneActive(false);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDropZoneActive(false);
-    processAnswer(draggedTerm);
-    setDraggedTerm(null);
-  };
-
-  // ─── Touch / Mobile drag handlers ────────────────────────────────────────────
-
-  const createGhost = (label: string, x: number, y: number, width: number) => {
-    const ghost = document.createElement("div");
-    ghost.textContent = label;
-    ghost.className = "term-card-compact touch-ghost";
-    ghost.style.cssText = `
-      position: fixed;
-      left: ${x}px;
-      top: ${y}px;
-      width: ${width}px;
-      transform: translate(-50%, -50%) scale(1.05);
-      z-index: 9999;
-      pointer-events: none;
-      opacity: 0.85;
-    `;
-    document.body.appendChild(ghost);
-    ghostRef.current = ghost;
-  };
-
-  const removeGhost = () => {
-    if (ghostRef.current) {
-      document.body.removeChild(ghostRef.current);
-      ghostRef.current = null;
-    }
-  };
-
-  const isOverDropZone = (x: number, y: number): boolean => {
-    if (!dropZoneRef.current) return false;
-    const rect = dropZoneRef.current.getBoundingClientRect();
-    return (
-      x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom
-    );
-  };
-
-  const setDropZoneHighlight = (active: boolean) => {
-    dropZoneRef.current?.classList.toggle("active", active);
-  };
-
-  const handleTouchStart = (
-    termId: string,
-    label: string,
-    e: React.TouchEvent,
-  ) => {
-    const touch = e.touches[0];
-    const cardEl = e.currentTarget as HTMLElement;
-    setDraggedTerm(termId);
-    createGhost(label, touch.clientX, touch.clientY, cardEl.offsetWidth);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    // Direct DOM updates — no React re-render, no lag
-    if (ghostRef.current) {
-      ghostRef.current.style.left = `${touch.clientX}px`;
-      ghostRef.current.style.top = `${touch.clientY}px`;
-    }
-    setDropZoneHighlight(isOverDropZone(touch.clientX, touch.clientY));
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    const touch = e.changedTouches[0];
-    const overDropZone = isOverDropZone(touch.clientX, touch.clientY);
-
-    removeGhost();
-    setDropZoneHighlight(false);
-
-    if (overDropZone) {
-      processAnswer(draggedTerm);
-    }
-
-    setDraggedTerm(null);
-  };
-
-  // ─── Shared answer logic ──────────────────────────────────────────────────────
-
-  const processAnswer = (termId: string | null) => {
-    if (!termId || !currentQuestion) return;
-
-    const isCorrect = termId === currentQuestion.id;
-
-    if (isCorrect) {
-      setShowFeedback("success");
-      successAudio.play();
-      setAvailableTerms((prev) => prev.filter((t) => t.id !== termId));
+    if (option.isCorrect) {
+      setShowFeedback("correct");
+      new Audio(successSound).play().catch(() => {});
 
       setTimeout(() => {
         setShowFeedback(null);
-        if (currentIndex < shuffledTerms.length - 1) {
-          setCurrentIndex(currentIndex + 1);
+        if (currentIndex < SCENARIOS.length - 1) {
+          setCurrentIndex((i) => i + 1);
         } else {
           navigate(SERVICIOS_FINANCIEROS_PATHS.FEEDBACK);
         }
-      }, 1500);
+      }, 2000);
     } else {
-      setShowFeedback("error");
-      failAudio.play();
-      setTimeout(() => setShowFeedback(null), 1500);
+      setShowFeedback("wrong");
+      new Audio(failSound).play().catch(() => {});
+      setTimeout(() => setShowFeedback(null), 2000);
     }
   };
 
-  if (!currentQuestion) {
-    return (
-      <ModulePageLayout title="Servicios Financieros">
-        <div className="activity-loading">Cargando actividad...</div>
-      </ModulePageLayout>
-    );
-  }
-
   return (
-    <ModulePageLayout title="Servicios Financieros">
-      <div className="activity-container-compact">
-        <ProgressBar
-          current={currentIndex + 1}
-          total={shuffledTerms.length}
-          showText={true}
-          label="Pregunta"
-          className="max-w-3xl mx-auto mb-6"
-        />
+    <ModulePageLayout title="Productos y servicios financieros">
+      <div className="space-y-8 mt-10 pb-12">
+        <div className="max-w-2xl mx-auto w-full">
+          <div className="module-card">
+            <div className="space-y-6">
+              <p className="text-sm text-gray-600">
+                Escenario {currentIndex + 1} de {SCENARIOS.length}
+              </p>
 
-        <div className="max-w-5xl mx-auto w-full flex-1">
-          <div className="bg-white rounded-3xl shadow-xl p-8 border-3 border-(--blue)">
-            {/* Drop Zone */}
-            <div
-              ref={dropZoneRef}
-              className={`drop-zone-compact ${isDropZoneActive ? "active" : ""} ${
-                showFeedback ? `feedback-${showFeedback}` : ""
-              }`}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            >
-              {showFeedback === "success" && (
-                <div className="feedback-icon-compact success w-5xl text-center">
-                  ✓
-                </div>
-              )}
-              {showFeedback === "error" && (
-                <div className="feedback-icon-compact error w-5xl text-center">
-                  ✗
-                </div>
-              )}
-              {!showFeedback && (
-                <p className="drop-zone-text w-5xl">
-                  {currentQuestion.description}
+              <p className="text-lg text-gray-800 leading-relaxed">
+                Hoy, en la vereda El Roblal, varias personas están tomando
+                decisiones importantes sobre su dinero. Acompáñelas a lo largo
+                del día y ayúdeles a escoger el producto financiero que mejor se
+                ajuste a cada una de sus necesidades.
+              </p>
+
+              <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
+                <p className="text-lg text-gray-800 leading-relaxed mb-4">
+                  {scenario.context}
                 </p>
-              )}
-            </div>
+                <p className="text-xl font-semibold text-(--blue)">
+                  {scenario.question}
+                </p>
+              </div>
 
-            {/* Draggable Terms Grid */}
-            <div className="terms-grid-compact">
-              {availableTerms.map((term) => (
-                <div
-                  key={term.id}
-                  draggable
-                  onDragStart={() => handleDragStart(term.id)}
-                  onDragEnd={handleDragEnd}
-                  onTouchStart={(e) => handleTouchStart(term.id, term.term, e)}
-                  onTouchMove={handleTouchMove}
-                  onTouchEnd={handleTouchEnd}
-                  className={`term-card-compact ${draggedTerm === term.id ? "dragging" : ""}`}
-                >
-                  {term.term}
+              {showFeedback === "correct" && (
+                <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4">
+                  <p className="text-green-800 font-medium">
+                    {scenario.feedbackCorrect}
+                  </p>
                 </div>
-              ))}
+              )}
+
+              {showFeedback === "wrong" && (
+                <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
+                  <p className="text-red-800 font-medium">
+                    {scenario.feedbackWrong}
+                  </p>
+                </div>
+              )}
+
+              {!showFeedback && (
+                <div className="space-y-3">
+                  {scenario.options.map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => handleSelect(option)}
+                      className="w-full p-4 rounded-xl border-2 border-(--blue) bg-white hover:bg-blue-50 hover:border-blue-400 transition-all text-left text-lg font-medium text-gray-800"
+                    >
+                      {option.text}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

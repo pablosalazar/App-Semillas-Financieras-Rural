@@ -1,194 +1,140 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { ModulePageLayout } from "@/shared/components/ModulePageLayout";
-import { Modal } from "@/shared/components/ui/Modal";
 import { useNavigate } from "react-router";
 import { DEUDAS_SANAS_PATHS } from "../constants/paths";
-import pedroImage from "../assets/images/pedro.png";
-import wrongAnswerAudio from "../assets/audio/wrong-answer.ogg";
+import failSound from "@/assets/sounds/fail.mp3";
+
+const DEFINITIONS: { word: string; definition: string }[] = [
+  {
+    word: "Deuda",
+    definition:
+      "Dinero que se pide prestado y que debe devolverse en un tiempo acordado.",
+  },
+  {
+    word: "Interés",
+    definition:
+      "Costo que se paga por usar el dinero prestado, calculado como un porcentaje del valor total del préstamo.",
+  },
+  {
+    word: "Plazo",
+    definition:
+      "Tiempo que se acuerda para terminar de pagar la deuda, normalmente expresado en meses.",
+  },
+  {
+    word: "Cuota",
+    definition:
+      "Valor que se paga periódicamente (por lo general cada mes) para ir cancelando el préstamo hasta completarlo.",
+  },
+  {
+    word: "Capacidad de pago",
+    definition:
+      "Cantidad de dinero que una persona puede destinar al pago de deudas sin afectar sus gastos básicos ni su ahorro.",
+  },
+  {
+    word: "Entidad formal",
+    definition:
+      "Institución reconocida y vigilada por el Estado, como un banco o una cooperativa, que presta dinero de manera legal y segura.",
+  },
+  {
+    word: "Deuda sana",
+    definition:
+      "Préstamo tomado para mejorar la economía o alcanzar una meta, planeando su pago sin poner en riesgo el bienestar financiero.",
+  },
+  {
+    word: "Endeudamiento excesivo",
+    definition:
+      "Situación en la que el dinero disponible no alcanza para cubrir todas las deudas sin dejar de atender los gastos esenciales.",
+  },
+  {
+    word: "Mora",
+    definition:
+      "Retraso en el pago de una cuota o compromiso financiero, que puede generar cobros adicionales o afectar el historial crediticio.",
+  },
+];
+
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
 
 export default function Activity() {
   const navigate = useNavigate();
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [showWrongAnswerModal, setShowWrongAnswerModal] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [showWrong, setShowWrong] = useState(false);
 
-  const question =
-    "Pedro debe elegir una de las dos opciones. Ayúdalo a escoger la mejor opción seleccionando su respuesta:";
+  const current = DEFINITIONS[currentIndex];
+  const options = useMemo(() => {
+    const correct = current.word;
+    const others = DEFINITIONS.filter((d) => d.word !== correct).map((d) => d.word);
+    const wrongOptions = shuffleArray(others).slice(0, 3);
+    return shuffleArray([correct, ...wrongOptions]);
+  }, [currentIndex]);
 
-  const answers = [
-    {
-      id: "a",
-      text: "Las semillas para su cosecha",
-      isCorrect: true,
-    },
-    {
-      id: "b",
-      text: "El vestido para su hija",
-      isCorrect: false,
-    },
-  ];
-
-  const handleAnswerSelect = (answerId: string) => {
-    if (!selectedAnswer) {
-      setSelectedAnswer(answerId);
-      const answer = answers.find((a) => a.id === answerId);
-
-      if (answer?.isCorrect) {
-        // Correct answer - navigate to feedback
-        navigate(DEUDAS_SANAS_PATHS.FEEDBACK);
+  const handleSelect = (word: string) => {
+    if (word === current.word) {
+      if (currentIndex < DEFINITIONS.length - 1) {
+        setCurrentIndex((i) => i + 1);
+        setShowWrong(false);
       } else {
-        // Wrong answer - show modal and play audio
-        setShowWrongAnswerModal(true);
+        navigate(DEUDAS_SANAS_PATHS.FEEDBACK);
       }
+    } else {
+      setShowWrong(true);
+      new Audio(failSound).play().catch(() => {});
     }
   };
 
-  const handleTryAgain = () => {
-    setShowWrongAnswerModal(false);
-    setSelectedAnswer(null);
-    // Stop and reset audio
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-  };
-
-  // Play audio when wrong answer modal opens
   useEffect(() => {
-    if (showWrongAnswerModal) {
-      const audio = new Audio(wrongAnswerAudio);
-      audioRef.current = audio;
-      audio.play().catch((error) => {
-        console.error("Error playing wrong answer audio:", error);
-      });
-
-      return () => {
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current.currentTime = 0;
-        }
-      };
-    }
-  }, [showWrongAnswerModal]);
-
-  const getAnswerClassName = (answerId: string) => {
-    const baseClasses =
-      "flex items-center gap-4 p-4 rounded-xl border-3 cursor-pointer transition-all";
-
-    if (!selectedAnswer) {
-      // Before selection
-      return `${baseClasses} border-gray-300 bg-white hover:border-blue-300 hover:bg-blue-50`;
-    }
-
-    // After selection
-    const answer = answers.find((a) => a.id === answerId);
-    if (answer?.isCorrect) {
-      return `${baseClasses} border-green-500 bg-green-50`;
-    }
-    if (selectedAnswer === answerId && !answer?.isCorrect) {
-      return `${baseClasses} border-red-500 bg-red-50`;
-    }
-    return `${baseClasses} border-gray-300 bg-gray-100 opacity-60`;
-  };
-
-  const getAnswerIcon = (answerId: string) => {
-    if (!selectedAnswer) {
-      // Radio button before selection
-      return (
-        <div className="w-6 h-6 rounded-full border-2 border-gray-400 flex items-center justify-center">
-          <span className="text-lg font-bold text-gray-600">
-            {answerId.toUpperCase()}
-          </span>
-        </div>
-      );
-    }
-
-    // Icons after selection
-    const answer = answers.find((a) => a.id === answerId);
-    if (answer?.isCorrect) {
-      return (
-        <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
-          <span className="text-sm font-bold text-white">✓</span>
-        </div>
-      );
-    }
-    if (selectedAnswer === answerId && !answer?.isCorrect) {
-      return (
-        <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center">
-          <span className="text-sm font-bold text-white">✗</span>
-        </div>
-      );
-    }
-    return (
-      <div className="w-6 h-6 rounded-full border-2 border-gray-400 flex items-center justify-center">
-        <span className="text-lg font-bold text-gray-400">
-          {answerId.toUpperCase()}
-        </span>
-      </div>
-    );
-  };
+    setShowWrong(false);
+  }, [currentIndex]);
 
   return (
     <ModulePageLayout title="Deudas sanas">
-      <div className="space-y-6 mt-10">
-        <div className="max-w-3xl mx-auto w-full flex-1">
-          <div className="module-card relative min-h-[500px]">
-            <div className="space-y-6">
-              {/* Question Text */}
-              <h2 className="text-2xl font-bold text-(--blue) leading-relaxed text-center">
-                {question}
-              </h2>
+      <div className="space-y-8 mt-10 pb-12">
+        <div className="max-w-2xl mx-auto w-full">
+          <div className="module-card min-h-[400px]">
+            <div className="space-y-8">
+              <p className="text-sm text-gray-600">
+                Relacione la definición con la palabra correcta. Tema{" "}
+                {currentIndex + 1} de {DEFINITIONS.length}
+              </p>
 
-              {/* Answer Options */}
-              <div className="space-y-3">
-                {answers.map((answer) => (
-                  <label
-                    key={answer.id}
-                    className={getAnswerClassName(answer.id)}
-                    onClick={() => handleAnswerSelect(answer.id)}
+              <div className="bg-gray-50 rounded-xl p-6 border-2 border-(--blue)">
+                <p className="text-xl font-medium text-gray-800 text-center">
+                  {current.definition}
+                </p>
+              </div>
+
+              <p className="text-gray-600">
+                Seleccione la palabra que corresponde:
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {options.map((word) => (
+                  <button
+                    key={word}
+                    type="button"
+                    onClick={() => handleSelect(word)}
+                    className="p-4 rounded-xl border-2 border-(--blue) bg-white hover:bg-blue-50 hover:border-blue-400 transition-all text-lg font-medium text-gray-800 text-center"
                   >
-                    {getAnswerIcon(answer.id)}
-                    <span className="flex-1 text-lg font-medium text-gray-800">
-                      {answer.text}
-                    </span>
-                  </label>
+                    {word}
+                  </button>
                 ))}
               </div>
-            </div>
 
-            {/* Pedro Image - Positioned absolutely to the right, doesn't allocate space */}
-            <div className="absolute right-4 bottom-4 hidden lg:block pointer-events-none">
-              <img
-                src={pedroImage}
-                alt="Pedro"
-                className="max-w-50 h-auto rounded-lg object-cover"
-              />
+              {showWrong && (
+                <p className="text-red-600 font-medium text-center">
+                  No corresponde. Intente de nuevo.
+                </p>
+              )}
             </div>
           </div>
         </div>
       </div>
-
-      {/* Wrong Answer Modal */}
-      <Modal isOpen={showWrongAnswerModal} onClose={handleTryAgain} size="lg">
-        <div className="space-y-6 p-4">
-          <h2 className="text-3xl font-bold text-(--blue) text-center">
-            ¡Espere!
-          </h2>
-
-          <div className="text-center space-y-4">
-            <p className="text-lg text-gray-700">
-              Piense un momento si la compra del vestido es necesaria e intente
-              de nuevo su respuesta.
-            </p>
-          </div>
-
-          <div className="flex justify-center pt-4">
-            <button onClick={handleTryAgain} className="btn btn-orange">
-              Intentar de nuevo
-            </button>
-          </div>
-        </div>
-      </Modal>
     </ModulePageLayout>
   );
 }

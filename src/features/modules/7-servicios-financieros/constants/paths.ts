@@ -1,4 +1,4 @@
-const BASE_PATH = "/modulos/servicios-financieros";
+const BASE_PATH = "/modulos/productos-y-servicios-financieros";
 
 export const SERVICIOS_FINANCIEROS_PATHS = {
   BASE_PATH,
