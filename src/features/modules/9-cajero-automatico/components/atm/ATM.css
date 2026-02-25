@@ -4,12 +4,13 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background: var(--dark-blue);
 }
 
 .atm__header,
 .atm__footer {
   width: 100%;
-  background-color: var(--blue);
+  background-color: var(--brown);
   height: 10px;
   flex-shrink: 0;
 }
@@ -22,7 +23,7 @@
 }
 
 .atm__sidebar {
-  background-color: var(--blue);
+  background-color: var(--brown);
   width: 140px;
   padding: 20px;
   display: flex;

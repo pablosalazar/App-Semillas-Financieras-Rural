@@ -157,7 +157,7 @@ export function ModulesSlider() {
             key={index}
             onClick={() => setCurrentSlide(index)}
             className={`w-3 h-3 rounded-full transition-all ${currentSlide === index
-              ? "bg-(--blue) w-8"
+              ? "bg-(--green) w-8"
               : "bg-gray-300 hover:bg-gray-400"
               }`}
             aria-label={`Go to slide ${index + 1}`}

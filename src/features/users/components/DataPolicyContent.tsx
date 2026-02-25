@@ -5,7 +5,7 @@ export function DataPolicyContent() {
   return (
     <div className="text-sm text-muted-foreground space-y-3 max-h-[60vh] overflow-y-auto pr-1">
       <p>
-        Al registrarse en la Aplicación Simulacion de cajero automatico, usted
+        Al registrarse en la Aplicación Semillas Financieras, usted
         otorga autorización previa, expresa e informada a la Fundación Mundo
         Mujer con NIT. 800.065.180-9, domiciliada y ubicada en Popayán -
         Colombia en la Carrera 10 No. 4 – 60, teléfono (2) 835 38 38 y página

@@ -1,6 +1,6 @@
 import btnRightATM from "../../assets/images/btn-right-atm.png";
 import btnLeftATM from "../../assets/images/btn-left-atm.png";
-import fmmHeader from "../../assets/images/fmm-header.png";
+// import fmmHeader from "../../assets/images/fmm-header.png";
 import pressButtonSound from "../../assets/audio/press-button.mp3";
 import { Link } from "react-router";
 import type { ReactNode } from "react";
@@ -107,7 +107,7 @@ export function ATM({ config }: ATMProps) {
 
         <div className="atm__screen">
           <div className="atm__screen-header">
-            <img src={fmmHeader} alt="FMM Header" className="atm__logo" />
+            {/* <img src={fmmHeader} alt="FMM Header" className="atm__logo" /> */}
             {config.title && <h2 className="atm__title">{config.title}</h2>}
           </div>
 
@@ -131,9 +131,8 @@ export function ATM({ config }: ATMProps) {
                   return (
                     <div
                       key={index}
-                      className={`atm__menu-option ${
-                        !option.href && !option.onClick ? "opacity-70" : ""
-                      }`}
+                      className={`atm__menu-option ${!option.href && !option.onClick ? "opacity-70" : ""
+                        }`}
                     >
                       {option.label}
                     </div>
@@ -155,9 +154,8 @@ export function ATM({ config }: ATMProps) {
                   return (
                     <div
                       key={index}
-                      className={`atm__menu-option ${
-                        !option.href && !option.onClick ? "opacity-70" : ""
-                      }`}
+                      className={`atm__menu-option ${!option.href && !option.onClick ? "opacity-70" : ""
+                        }`}
                     >
                       {option.label}
                     </div>
