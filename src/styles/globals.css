@@ -108,68 +108,58 @@ body {
   color: var(--blue);
 }
 
+/* Ribbon - structure from reference, colors from yellow button (btn-rustico-amarillo) */
 .ribbon {
-  padding: 0.31em 3em;
+  font-size: 23px !important;
+  width: 50%;
+  font-weight: 700;
   position: relative;
-  color: #ffffff;
+  background: linear-gradient(90deg, #f7c43a 0%, #f0b429 50%, #d89d1c 100%);
+  color: #4d3200;
   text-align: center;
-  text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.3);
-  box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.3),
-    inset 0px 0px 20px rgba(0, 0, 0, 0.1), 0px 1px 1px rgba(0, 0, 0, 0.4);
-  background: linear-gradient(90deg,
-      #024a73 0%,
-      var(--blue) 50%,
-      #024a73 100%);
-  display: inline-block;
+  padding: 10px 40px;
+  width: auto;
+  margin-bottom: 20px;
+}
 
-  &:before,
-  &:after {
-    content: "";
-    width: 1.9em;
-    bottom: -0.5em;
-    position: absolute;
-    z-index: 3;
-    display: block;
-    border: 0.9em solid #024a73;
-    box-shadow: 0px 1px 0px rgba(0, 0, 0, 0.4);
-    z-index: 2;
-  }
+.ribbon:before,
+.ribbon:after {
+  content: "";
+  position: absolute;
+  display: block;
+  bottom: -1em;
+  border: 1.5em solid #8b5a00;
+  z-index: -1;
+}
 
-  &:before {
-    left: -1.35em;
-    border-right-width: 0.75em;
-    border-left-color: transparent;
-  }
+.ribbon:before {
+  left: -2em;
+  border-right-width: 1.5em;
+  border-left-color: transparent;
+}
 
-  &:after {
-    right: -1.35em;
-    border-left-width: 0.75em;
-    border-right-color: transparent;
-  }
+.ribbon:after {
+  right: -2em;
+  border-left-width: 1.5em;
+  border-right-color: transparent;
+}
 
-  .content {
-    font-size: 18px;
-    font-weight: 500;
+.ribbon .content:before,
+.ribbon .content:after {
+  content: "";
+  position: absolute;
+  display: block;
+  border-style: solid;
+  border-color: #6b4500 transparent transparent transparent;
+  bottom: -1em;
+}
 
-    &:before,
-    &:after {
-      content: "";
-      bottom: -0.5em;
-      position: absolute;
-      z-index: 3;
-      display: block;
-      border-style: solid;
-      border-color: #013a5a transparent transparent transparent;
-    }
+.ribbon .content:before {
+  left: 0;
+  border-width: 1em 0 0 1em;
+}
 
-    &:before {
-      left: 0;
-      border-width: 0.5em 0 0 0.5em;
-    }
-
-    &:after {
-      right: 0;
-      border-width: 0.5em 0.5em 0 0;
-    }
-  }
+.ribbon .content:after {
+  right: 0;
+  border-width: 1em 1em 0 0;
 }
