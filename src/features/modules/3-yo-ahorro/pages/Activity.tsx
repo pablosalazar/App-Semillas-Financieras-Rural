@@ -1,24 +1,7 @@
 import { useState, useMemo } from "react";
 import { ModulePageLayout } from "@/shared/components/ModulePageLayout";
-import { Modal } from "@/shared/components/ui/Modal";
 import { useNavigate } from "react-router";
 import { YO_AHORRO_PATHS } from "../constants/paths";
-
-interface FormData {
-  savingsGoal: string;
-  goalValue: string;
-  desiredTime: string;
-  totalIncome: string;
-  totalExpense: string;
-}
-
-interface FormErrors {
-  savingsGoal?: string;
-  goalValue?: string;
-  desiredTime?: string;
-  totalIncome?: string;
-  totalExpense?: string;
-}
 
 // Format number as currency
 const formatCurrency = (value: number): string => {
@@ -35,368 +18,176 @@ const parseCurrency = (value: string): number => {
   return parseInt(value.replace(/[^\d]/g, "")) || 0;
 };
 
-const validate = (data: FormData): FormErrors => {
-  const errors: FormErrors = {};
-
-  if (!data.savingsGoal.trim()) {
-    errors.savingsGoal = "Ingresar el nombre de su meta";
-  } else if (!/^[a-zA-ZÁ-ÿ\s]{1,40}$/.test(data.savingsGoal)) {
-    errors.savingsGoal = "El nombre solo puede contener letras y espacios";
-  }
-
-  if (!data.goalValue || parseCurrency(data.goalValue) === 0) {
-    errors.goalValue = "Ingresar el valor de su meta de ahorro";
-  }
-
-  if (!data.desiredTime || parseCurrency(data.desiredTime) === 0) {
-    errors.desiredTime = "Ingresar el tiempo de cumplimiento en meses";
-  }
-
-  if (!data.totalIncome || parseCurrency(data.totalIncome) === 0) {
-    errors.totalIncome = "Ingresar el valor de su total de ingresos";
-  }
-
-  if (!data.totalExpense || parseCurrency(data.totalExpense) === 0) {
-    errors.totalExpense = "Ingresar el valor de su total de egresos";
-  }
-
-  return errors;
+const formatInputCurrency = (value: string): string => {
+  if (!value) return "";
+  const numValue = parseInt(value);
+  if (isNaN(numValue)) return "";
+  return formatCurrency(numValue);
 };
 
 export default function Activity() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<FormData>({
-    savingsGoal: "",
-    goalValue: "",
-    desiredTime: "",
-    totalIncome: "",
-    totalExpense: "",
-  });
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [showResultModal, setShowResultModal] = useState(false);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [meta, setMeta] = useState("");
+  const [costoTotal, setCostoTotal] = useState("");
+  const [plazoMeses, setPlazoMeses] = useState("");
 
-  // Calculate available for savings
-  const availableForSavings = useMemo(() => {
-    const income = parseCurrency(formData.totalIncome);
-    const expense = parseCurrency(formData.totalExpense);
-    if (income > 0 && expense >= 0) {
-      return income - expense;
+  const ahorroMensual = useMemo(() => {
+    const costo = parseCurrency(costoTotal);
+    const meses = parseCurrency(plazoMeses);
+    if (costo > 0 && meses > 0) {
+      return Math.round(costo / meses);
     }
     return 0;
-  }, [formData.totalIncome, formData.totalExpense]);
+  }, [costoTotal, plazoMeses]);
 
-  // Calculate monthly fee
-  const monthlyFee = useMemo(() => {
-    const goalValue = parseCurrency(formData.goalValue);
-    const desiredTime = parseCurrency(formData.desiredTime);
-    if (goalValue > 0 && desiredTime > 0) {
-      return Math.round(goalValue / desiredTime);
-    }
-    return 0;
-  }, [formData.goalValue, formData.desiredTime]);
+  const canProceedToStep2 = meta.trim().length > 0;
+  const canCalculate = parseCurrency(costoTotal) > 0 && parseCurrency(plazoMeses) > 0;
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    isCurrency = false
-  ) => {
-    const { name, value } = e.target;
-    if (isCurrency) {
-      // Remove non-digits for currency fields
-      const numericValue = value.replace(/[^\d]/g, "");
-      setFormData((prev) => ({
-        ...prev,
-        [name]: numericValue,
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
-    // Clear error for this field
-    if (errors[name as keyof FormErrors]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: undefined,
-      }));
-    }
+  const handleCostoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCostoTotal(e.target.value.replace(/[^\d]/g, ""));
   };
 
-  const formatInputCurrency = (value: string): string => {
-    if (!value) return "";
-    const numValue = parseInt(value);
-    if (isNaN(numValue)) return "";
-    return formatCurrency(numValue);
+  const handlePlazoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPlazoMeses(e.target.value.replace(/[^\d]/g, ""));
   };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const validationErrors = validate(formData);
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-    setShowResultModal(true);
-  };
-
-  const canAffordGoal = availableForSavings >= monthlyFee && monthlyFee > 0;
 
   return (
     <ModulePageLayout title="Yo ahorro">
-      <div className="space-y-6 mt-10">
-        <div className="max-w-4xl mx-auto w-full flex-1">
+      <div className="space-y-8 mt-10 pb-12">
+        <div className="max-w-2xl mx-auto w-full">
           <div className="module-card">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Form Fields in Two Columns */}
+            {step === 1 && (
               <div className="space-y-6">
-                {/* Savings Goal */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                  <div className="flex items-center h-full justify-end">
-                    <label className="form-label mb-0 text-right">
-                      Mi meta de ahorros
-                      <span className="form-required">*</span>
-                    </label>
-                  </div>
-                  <div className="w-full relative">
-                    <input
-                      name="savingsGoal"
-                      value={formData.savingsGoal}
-                      onChange={(e) => handleInputChange(e, false)}
-                      placeholder="Ej: Moto, Carro, Viaje..."
-                      className={`form-input-base ${
-                        errors.savingsGoal
-                          ? "form-input-error"
-                          : "form-input-normal"
-                      }`}
-                      maxLength={40}
-                    />
-                    {errors.savingsGoal && (
-                      <p className="absolute -bottom-6 left-0 text-sm text-red-500 font-medium">
-                        {errors.savingsGoal}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Goal Value */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                  <div className="flex items-center h-full justify-end">
-                    <label className="form-label mb-0 text-right">
-                      Valor meta
-                      <span className="form-required">*</span>
-                    </label>
-                  </div>
-                  <div className="w-full relative">
-                    <input
-                      name="goalValue"
-                      type="text"
-                      value={formatInputCurrency(formData.goalValue)}
-                      onChange={(e) => handleInputChange(e, true)}
-                      placeholder="Valor total"
-                      className={`form-input-base ${
-                        errors.goalValue
-                          ? "form-input-error"
-                          : "form-input-normal"
-                      }`}
-                    />
-                    {errors.goalValue && (
-                      <p className="absolute -bottom-6 left-0 text-sm text-red-500 font-medium">
-                        {errors.goalValue}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Desired Time */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                  <div className="flex items-center h-full justify-end">
-                    <label className="form-label mb-0 text-right">
-                      Tiempo deseado (en meses)
-                      <span className="form-required">*</span>
-                    </label>
-                  </div>
-                  <div className="w-full relative">
-                    <input
-                      name="desiredTime"
-                      type="text"
-                      value={formData.desiredTime}
-                      onChange={(e) => handleInputChange(e, true)}
-                      placeholder="¿En cuántos meses desea tenerla?"
-                      className={`form-input-base ${
-                        errors.desiredTime
-                          ? "form-input-error"
-                          : "form-input-normal"
-                      }`}
-                      maxLength={3}
-                    />
-                    {errors.desiredTime && (
-                      <p className="absolute -bottom-6 left-0 text-sm text-red-500 font-medium">
-                        {errors.desiredTime}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Total Income */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                  <div className="flex items-center h-full justify-end">
-                    <label className="form-label mb-0 text-right">
-                      Total ingresos (Mensual)
-                      <span className="form-required">*</span>
-                    </label>
-                  </div>
-                  <div className="w-full relative">
-                    <input
-                      name="totalIncome"
-                      type="text"
-                      value={formatInputCurrency(formData.totalIncome)}
-                      onChange={(e) => handleInputChange(e, true)}
-                      placeholder="Salario"
-                      className={`form-input-base ${
-                        errors.totalIncome
-                          ? "form-input-error"
-                          : "form-input-normal"
-                      }`}
-                    />
-                    {errors.totalIncome && (
-                      <p className="absolute -bottom-6 left-0 text-sm text-red-500 font-medium">
-                        {errors.totalIncome}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Total Expenses */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                  <div className="flex items-center h-full justify-end">
-                    <label className="form-label mb-0 text-right">
-                      Total egresos (Mensual)
-                      <span className="form-required">*</span>
-                    </label>
-                  </div>
-                  <div className="w-full relative">
-                    <input
-                      name="totalExpense"
-                      type="text"
-                      value={formatInputCurrency(formData.totalExpense)}
-                      onChange={(e) => handleInputChange(e, true)}
-                      placeholder="¿Cuánto son sus gastos mensuales?"
-                      className={`form-input-base ${
-                        errors.totalExpense
-                          ? "form-input-error"
-                          : "form-input-normal"
-                      }`}
-                    />
-                    {errors.totalExpense && (
-                      <p className="absolute -bottom-6 left-0 text-sm text-red-500 font-medium">
-                        {errors.totalExpense}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Available for Savings */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                  <div className="flex items-center h-full justify-end">
-                    <label className="form-label mb-0 text-right">
-                      Dinero disponible para ahorro (Mensual)
-                    </label>
-                  </div>
-                  <div className="w-full">
-                    {canAffordGoal ? (
-                      <input
-                        type="text"
-                        className="form-input-base form-input-normal"
-                        value={formatCurrency(availableForSavings)}
-                        disabled
-                        readOnly
-                      />
-                    ) : (
-                      <input
-                        type="text"
-                        className="form-input-base form-input-normal opacity-60"
-                        value="No tiene dinero suficiente para ahorrar"
-                        disabled
-                        readOnly
-                      />
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Submit Button */}
-              <div className="flex justify-center pt-4">
-                <button
-                  type="submit"
-                  className="btn btn-orange text-xl px-8 py-3"
-                >
-                  Mostrar resultado
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      {/* Result Modal */}
-      <Modal
-        isOpen={showResultModal}
-        onClose={() => setShowResultModal(false)}
-        size="lg"
-      >
-        <div className="space-y-6 p-4">
-          <h2 className="text-3xl font-bold text-(--blue) text-center">
-            {canAffordGoal ? "¡Felicidades!" : "¡Lo sentimos!"}
-          </h2>
-
-          <div className="text-center space-y-4">
-            {canAffordGoal ? (
-              <div className="space-y-3">
-                <p className="text-lg text-gray-700">
-                  Usted tiene{" "}
-                  <strong className="text-green-600 text-xl">
-                    {formatCurrency(availableForSavings)}
-                  </strong>{" "}
-                  disponible para ahorrar, de los cuales si ahorra{" "}
-                  <strong className="text-blue-600 text-xl">
-                    {formatCurrency(monthlyFee)}
-                  </strong>{" "}
-                  durante{" "}
-                  <strong>{parseCurrency(formData.desiredTime)} meses</strong>{" "}
-                  podrá obtener su{" "}
-                  <strong className="text-(--blue)">
-                    {formData.savingsGoal}
-                  </strong>
-                  !
+                <h2 className="text-xl font-bold text-(--blue)">
+                  Mi meta
+                </h2>
+                <p className="text-gray-700">
+                  Piense en algo que quiera lograr con su ahorro. Puede ser una
+                  meta personal o familiar.
                 </p>
+                <div>
+                  <label htmlFor="meta" className="form-label">
+                    Mi meta es:
+                  </label>
+                  <input
+                    id="meta"
+                    type="text"
+                    value={meta}
+                    onChange={(e) => setMeta(e.target.value)}
+                    placeholder="Ej: Comprar una moto, mejorar el cultivo..."
+                    className="form-input-base form-input-normal mt-2"
+                  />
+                </div>
+                <div className="flex justify-end pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setStep(2)}
+                    disabled={!canProceedToStep2}
+                    className="btn btn-orange"
+                  >
+                    Continuar
+                  </button>
+                </div>
               </div>
-            ) : (
-              <div className="space-y-3">
-                <p className="text-lg text-gray-700">
-                  Usted no tiene dinero disponible para ahorrar, identifique
-                  cuáles de sus gastos son innecesarios y analice alternativas
-                  para aumentar sus ingresos.
+            )}
+
+            {step === 2 && (
+              <div className="space-y-6">
+                <h2 className="text-xl font-bold text-(--blue)">
+                  Costo y plazo
+                </h2>
+                <p className="text-gray-700">
+                  Escriba cuánto cuesta su meta y en cuántos meses quiere
+                  alcanzarla.
                 </p>
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="costo" className="form-label">
+                      Costo total de la meta:
+                    </label>
+                    <input
+                      id="costo"
+                      type="text"
+                      value={formatInputCurrency(costoTotal)}
+                      onChange={handleCostoChange}
+                      placeholder="$0"
+                      className="form-input-base form-input-normal mt-2 w-full"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="plazo" className="form-label">
+                      Plazo en meses:
+                    </label>
+                    <input
+                      id="plazo"
+                      type="text"
+                      inputMode="numeric"
+                      value={plazoMeses}
+                      onChange={handlePlazoChange}
+                      placeholder="0"
+                      className="form-input-base form-input-normal mt-2 w-full"
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-between items-center pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setStep(1)}
+                    className="btn btn-blue"
+                  >
+                    Volver
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStep(3)}
+                    disabled={!canCalculate}
+                    className="btn btn-orange"
+                  >
+                    Calcular ahorro mensual
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="space-y-6">
+                <h2 className="text-xl font-bold text-(--blue)">
+                  Resultado
+                </h2>
+                <p className="text-lg text-gray-700">
+                  Para lograr su meta, necesita ahorrar{" "}
+                  <strong className="text-(--blue) text-xl">
+                    {formatCurrency(ahorroMensual)}
+                  </strong>{" "}
+                  cada mes.
+                </p>
+                <p className="text-gray-600">
+                  Revise si puede ahorrar esta cantidad cada mes, teniendo en
+                  cuenta su dinero disponible. Si no le es posible, puede ajustar
+                  el plazo o el costo de la meta.
+                </p>
+                <div className="flex justify-between items-center pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setStep(2)}
+                    className="btn btn-blue"
+                  >
+                    Ajustar mi plan
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate(YO_AHORRO_PATHS.FEEDBACK)}
+                    className="btn btn-orange"
+                  >
+                    Sí puedo ahorrar este monto
+                  </button>
+                </div>
               </div>
             )}
           </div>
-
-          <div className="flex gap-4 justify-end pt-4">
-            <button
-              onClick={() => setShowResultModal(false)}
-              className="btn btn-blue"
-            >
-              Volver
-            </button>
-            <button
-              onClick={() => navigate(YO_AHORRO_PATHS.FEEDBACK)}
-              className="btn btn-orange"
-            >
-              Finalizar
-            </button>
-          </div>
         </div>
-      </Modal>
+      </div>
     </ModulePageLayout>
   );
 }
